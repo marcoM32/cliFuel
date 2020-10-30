@@ -73,20 +73,12 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
         while ((row = CsvParser_getRow(csvparser))) {
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 10) {
-                if(strcasecmp(rowFields[6], query) == 0) {
+                if(stricmp(rowFields[6], query) == 0) {
                     current->id = atoi(rowFields[0]);
-                    char* name_value = malloc((sizeof(char) * strlen(rowFields[1])) + 1);
-                    strcpy(name_value, rowFields[1]);
-                    current->name = name_value;
-                    char* type_value = malloc((sizeof(char) * strlen(rowFields[2])) + 1);
-                    strcpy(type_value, rowFields[2]);
-                    current->type = type_value;
-                    char* address_value = malloc((sizeof(char) * strlen(rowFields[5])) + 1);
-                    strcpy(address_value, rowFields[5]);
-                    current->address = address_value;
-                    char* town_value = malloc((sizeof(char) * strlen(rowFields[6])) + 1);
-                    strcpy(town_value, rowFields[6]);
-                    current->town = town_value;
+                    current->name = strdup(rowFields[1]);
+                    current->type = strdup(rowFields[2]);
+                    current->address = strdup(rowFields[5]);
+                    current->town = strdup(rowFields[6]);
                     current->next = (station_t *) malloc(sizeof(station_t));
                     current->next->next = NULL;
                     current = current->next;

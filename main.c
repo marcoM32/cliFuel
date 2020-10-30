@@ -65,8 +65,8 @@ int main(int argn, char* argv[]) {
         }
     }
 
-    char* anagrafiaFilename = malloc((sizeof(char) * strlen(ANAGRAFIA_IMPIANTI_FILE)) + 1);
-    char* priceFilename = malloc((sizeof(char) * strlen(PREZZI_FILE)) + 1);
+    char* anagrafiaFilename = strdup(ANAGRAFIA_IMPIANTI_FILE);
+    char* priceFilename = strdup(PREZZI_FILE);
 
     if(!anagrafiaFilename || !priceFilename) exit(EXIT_FAILURE);
 
@@ -194,8 +194,6 @@ int main(int argn, char* argv[]) {
     free(priceFilename);
     freeStationList(stations);
     freePriceList(prices);
-    free(stations);
-    free(prices);
 
     return EXIT_SUCCESS;
 }
