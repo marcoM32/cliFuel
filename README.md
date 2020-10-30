@@ -8,6 +8,24 @@ The database URL is:
 - [anagrafica_impianti_attivi.csv](https://www.mise.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv)
 - [prezzo_alle_8.csv](https://www.mise.gov.it/images/exportCSV/prezzo_alle_8.csv)
 
+## Examples
+
+```
+$ ./cliFuel -q roma -s
+```
+
+<center>
+    <img src="img/search-only.png" width="100%" />
+</center>
+
+```
+$ ./cliFuel -q roma
+```
+
+<center>
+    <img src="img/best-price.png" width="100%" />
+</center>
+
 ## Libraries
 1. https://curl.haxx.se/libcurl/c/libcurl.html
 2. https://sourceforge.net/projects/cccsvparser/
