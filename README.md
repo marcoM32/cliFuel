@@ -10,6 +10,8 @@ The database URL is:
 
 ## Examples
 
+- Simple search
+
 ```
 $ ./cliFuel -q roma -s
 ```
@@ -17,6 +19,8 @@ $ ./cliFuel -q roma -s
 <center>
     <img src="img/search-only.png" width="100%" />
 </center>
+
+- Search for best price
 
 ```
 $ ./cliFuel -q roma
@@ -27,6 +31,7 @@ $ ./cliFuel -q roma
 </center>
 
 ## Libraries
+
 1. https://curl.haxx.se/libcurl/c/libcurl.html
 2. https://sourceforge.net/projects/cccsvparser/
 3. https://github.com/rxi/log.c
