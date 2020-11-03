@@ -36,6 +36,7 @@ $ ./cliFuel -q roma
 2. https://sourceforge.net/projects/cccsvparser/
 3. https://github.com/rxi/log.c
 4. https://github.com/rxi/map
+5. https://github.com/doches/progressbar.git
 
 ## License
 

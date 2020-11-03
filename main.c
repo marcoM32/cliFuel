@@ -65,6 +65,16 @@ int main(int argn, char* argv[]) {
         }
     }
 
+#ifdef ANIMATION
+    pthread_t thread;
+    statusbar *animation = statusbar_new("Elaborazione in corso...");
+    int rc = pthread_create(&thread, NULL, progress, animation);
+    if (rc) {
+        log_error("Errore: impossibile creare il thread, %d", rc);
+        exit(EXIT_FAILURE);
+    }
+#endif // ANIMATION
+
     char* anagrafiaFilename = strdup(ANAGRAFIA_IMPIANTI_FILE);
     char* priceFilename = strdup(PREZZI_FILE);
 
@@ -77,6 +87,7 @@ int main(int argn, char* argv[]) {
     strftime(priceFilename, strlen(PREZZI_FILE) + 1, PREZZI_FILE, timenow);
 
 #ifdef FILE_DOWNLOAD
+
     if(ignorecache || !(access(anagrafiaFilename, F_OK ) != -1))  {
         if(!download(ANAGRAFIA_IMPIANTI_URL, anagrafiaFilename)) {
             log_error("Impossibile scaricare il file %s", ANAGRAFIA_IMPIANTI_URL);
@@ -96,6 +107,7 @@ int main(int argn, char* argv[]) {
     } else {
         log_debug("File %s gia' in cache", PREZZI_URL);
     }
+
 #endif // FILE_DOWNLOAD
 
     station_t* stations = stationFinder(anagrafiaFilename, FILE_SEPARATOR, FILE_HEADER, query);
@@ -120,6 +132,11 @@ int main(int argn, char* argv[]) {
     }
 #endif // DEBUG
 
+#ifdef ANIMATION
+    pthread_cancel(thread);
+    statusbar_finish(animation);
+#endif // ANIMATION
+
     opendata_map_t map;
     map_init(&map);
 
@@ -128,10 +145,10 @@ int main(int argn, char* argv[]) {
         while (station->next != NULL) {
             if(searchonly)
                 printf( //
-                       u8"* %s - %s - %s\n", //
-                       station->name, //
-                       station->address, //
-                       station->town //
+                    u8"* %s - %s - %s\n", //
+                    station->name, //
+                    station->address, //
+                    station->town //
                 );
             if(prices != NULL) {
                 price_t *price = prices;
@@ -149,10 +166,10 @@ int main(int argn, char* argv[]) {
                             }
                         } else {
                             printf( //
-                                   u8"\t%s, %.3f euro %s\n", //
-                                   price->fuelDesc, //
-                                   price->price, //
-                                   price->self == 0 ? "non servito" : "servito" //
+                                u8"\t%s, %.3f euro %s\n", //
+                                price->fuelDesc, //
+                                price->price, //
+                                price->self == 0 ? "non servito" : "servito" //
                             );
                         }
                     }
@@ -197,3 +214,22 @@ int main(int argn, char* argv[]) {
 
     return EXIT_SUCCESS;
 }
+
+#ifdef ANIMATION
+static void * progress(void *argc) {
+    statusbar *animation = (statusbar*) argc;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    if(animation) {
+        while(true) {
+            statusbar_inc(animation);
+#ifdef _WIN32
+            Sleep(100);
+#else
+            sleep(0.50);
+#endif
+        }
+    }
+    return NULL;
+}
+#endif // ANIMATION
