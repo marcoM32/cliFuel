@@ -26,9 +26,20 @@
 #include <getopt.h>
 #include <map.h>
 #ifdef FILE_DOWNLOAD
-    #include <time.h>
-    #include <unistd.h>
+#include <time.h>
+#include <unistd.h>
 #endif // FILE_DOWNLOAD
+#ifdef ANIMATION
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#ifndef _UNISTD_H
+#include <unistd.h>
+#endif // _UNISTD_H
+#endif
+#include <statusbar.h>
+#include <pthread.h>
+#endif // ANIMATION
 #include "opendata.h"
 
 #define PROGRAM_VERSION "v0.01"
@@ -38,9 +49,14 @@ static struct option long_options[] = {
     { "search-only", no_argument, NULL, 's' },
     { "ignore-cache", no_argument, NULL, 'u' },
     { "verbose", no_argument, NULL, 'v' },
-    { "help", no_argument, NULL, 'h' }
+    { "help", no_argument, NULL, 'h' },
+    { NULL, no_argument, NULL, 0 }
 };
 
 typedef map_t(opendata_result_t*) opendata_map_t;
+
+#ifdef ANIMATION
+static void * progress(void *);
+#endif // ANIMATION
 
 #endif // MAIN_H_INCLUDED
