@@ -73,7 +73,7 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
         while ((row = CsvParser_getRow(csvparser))) {
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 10) {
-                if(stricmp(rowFields[6], query) == 0) {
+                if(strcasecmp(rowFields[6], query) == 0) {
                     current->id = atoi(rowFields[0]);
                     current->name = strdup(rowFields[1]);
                     current->type = strdup(rowFields[2]);
