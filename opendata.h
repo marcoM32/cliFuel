@@ -27,8 +27,12 @@
 #include <curl/curl.h>
 #include <csvparser.h>
 
-#define ANAGRAFIA_IMPIANTI_FILE "cache/anagrafica_impianti_%y_%m_%d.csv"
-#define PREZZI_FILE "cache/prezzi_%y_%m_%d.csv"
+#define CACHE_DIR "cache"
+
+#define ANAGRAFIA_IMPIANTI_FILE "anagrafica_impianti_%y_%m_%d.csv"
+#define PREZZI_FILE "prezzi_%y_%m_%d.csv"
+
+#define FILENAME(dir, filename) dir "/" filename
 
 #define ANAGRAFIA_IMPIANTI_URL "https://www.mise.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv"
 #define PREZZI_URL "https://www.mise.gov.it/images/exportCSV/prezzo_alle_8.csv"
