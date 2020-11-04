@@ -2,7 +2,7 @@
 
 cliFuel is a command line fuel price finder for Italy
 
-This program is based on open data published by Ministero dello sviluppo economico.
+This program is based on open data published by Ministero Dello Sviluppo Economico.
 The database URL is:
 
 - [anagrafica_impianti_attivi.csv](https://www.mise.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv)
@@ -36,7 +36,7 @@ $ ./cliFuel -q roma
 2. https://sourceforge.net/projects/cccsvparser/
 3. https://github.com/rxi/log.c
 4. https://github.com/rxi/map
-5. https://github.com/doches/progressbar.git
+5. https://github.com/doches/progressbar
 
 ## License
 
