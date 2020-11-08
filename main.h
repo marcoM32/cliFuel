@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <strings.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <getopt.h>
 #include <map.h>
 #ifdef FILE_DOWNLOAD
@@ -42,7 +44,7 @@
 #endif // ANIMATION
 #include "opendata.h"
 
-#define PROGRAM_VERSION "v0.01"
+#define PROGRAM_VERSION "v0.02"
 
 static struct option long_options[] = {
     { "query", required_argument, NULL, 'q' },
@@ -58,5 +60,7 @@ typedef map_t(opendata_result_t*) opendata_map_t;
 #ifdef ANIMATION
 static void * progress(void *);
 #endif // ANIMATION
+
+static void helpme();
 
 #endif // MAIN_H_INCLUDED

@@ -22,7 +22,7 @@ int main(int argn, char* argv[]) {
 
     log_set_level(LOG_ERROR);
 
-    char* query = "";
+    char* query = NULL;
     bool searchonly = false;
     bool ignorecache = false;
 
@@ -55,7 +55,8 @@ int main(int argn, char* argv[]) {
                     "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A\n"
                     "PARTICULAR PURPOSE.\n"
                     "\n"
-                    "Buildtime: %s - %s\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
+                    "Buildtime: %s - %s\n\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
+                    helpme();
             exit(EXIT_SUCCESS);
             break;
         case '?':
@@ -63,6 +64,20 @@ int main(int argn, char* argv[]) {
             exit(EXIT_FAILURE);
             break;
         }
+    }
+
+    if(!query) {
+        printf("Nessuna query specificata, impossibile proseguire");
+        exit(EXIT_SUCCESS);
+    }
+
+    struct stat st = {0};
+    if (stat(CACHE_DIR, &st) == -1) {
+#ifdef _WIN32
+        mkdir(CACHE_DIR);
+#else
+        mkdir(CACHE_DIR, 0700);
+#endif
     }
 
 #ifdef ANIMATION
@@ -75,16 +90,19 @@ int main(int argn, char* argv[]) {
     }
 #endif // ANIMATION
 
-    char* anagrafiaFilename = strdup(ANAGRAFIA_IMPIANTI_FILE);
-    char* priceFilename = strdup(PREZZI_FILE);
+    char* anagrafiaFilename = strdup(FILENAME(CACHE_DIR, ANAGRAFIA_IMPIANTI_FILE));
+    char* priceFilename = strdup(FILENAME(CACHE_DIR, PREZZI_FILE));
 
     if(!anagrafiaFilename || !priceFilename) exit(EXIT_FAILURE);
+
+    log_debug("File anagrafia: %s", anagrafiaFilename);
+    log_debug("File prezzi: %s", priceFilename);
 
     struct tm *timenow;
     time_t now = time(NULL);
     timenow = gmtime(&now);
-    strftime(anagrafiaFilename, strlen(ANAGRAFIA_IMPIANTI_FILE) + 1, ANAGRAFIA_IMPIANTI_FILE, timenow);
-    strftime(priceFilename, strlen(PREZZI_FILE) + 1, PREZZI_FILE, timenow);
+    strftime(anagrafiaFilename, strlen(FILENAME(CACHE_DIR, ANAGRAFIA_IMPIANTI_FILE)) + 1, FILENAME(CACHE_DIR, ANAGRAFIA_IMPIANTI_FILE), timenow);
+    strftime(priceFilename, strlen(FILENAME(CACHE_DIR, PREZZI_FILE)) + 1, FILENAME(CACHE_DIR, PREZZI_FILE), timenow);
 
 #ifdef FILE_DOWNLOAD
 
@@ -195,6 +213,7 @@ int main(int argn, char* argv[]) {
             (*val)->price->price, //
             ((*val)->price->self == 0) ? "non servito" : "servito"
         );
+        free(*val);
     }
 
 #ifdef NO_CACHE
@@ -233,3 +252,12 @@ static void * progress(void *argc) {
     return NULL;
 }
 #endif // ANIMATION
+
+static void helpme() {
+  printf("Parametri:\n\n"
+	"\t-q --query --> Comune di ricerca\n"
+	"\t-s --search-only --> Ricerca semplice\n"
+    "\t-u --ignore-cache --> Ignora la cache\n"
+    "\t-v --verbose --> Log verboso\n"
+    "\t-h --help --> Visualizza questo aiuto\n");
+}
