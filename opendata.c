@@ -91,7 +91,7 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
     return head;
 }
 
-price_t* priceFinder(char* filename, char* separator, bool header, station_t* list) {
+price_t* priceFinder(char* filename, char* separator, bool header, station_t* list, char* type) {
     price_t *head = (price_t*) malloc(sizeof(price_t));
     if(!head)
         return NULL;
@@ -105,7 +105,10 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
             if(CsvParser_getNumFields(row) == 5) {
                 station_t *tmp = list;
                 while (tmp->next != NULL) {
-                    if(tmp->id == atoi(rowFields[0])) {
+                    char *name = strdup(rowFields[1]);
+                    if(name)
+                        name = strlwr(name);
+                    if(tmp->id == atoi(rowFields[0]) && (!type || strstr(name, strlwr(type)) != NULL)) {
                         current->id = atoi(rowFields[0]);
                         char* fuelDesc_value = malloc((sizeof(char) * strlen(rowFields[1])) + 1);
                         strcpy(fuelDesc_value, rowFields[1]);
@@ -116,6 +119,7 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
                         current->next->next = NULL;
                         current = current->next;
                     }
+                    free(name);
                     tmp = tmp->next;
                 }
             }
