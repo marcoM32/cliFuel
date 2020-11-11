@@ -106,9 +106,7 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
                 station_t *tmp = list;
                 while (tmp->next != NULL) {
                     char *name = strdup(rowFields[1]);
-                    if(name)
-                        name = strlwr(name);
-                    if(tmp->id == atoi(rowFields[0]) && (!type || strstr(name, strlwr(type)) != NULL)) {
+                    if(tmp->id == atoi(rowFields[0]) && (!type || strstr(name, type) != NULL)) {
                         current->id = atoi(rowFields[0]);
                         char* fuelDesc_value = malloc((sizeof(char) * strlen(rowFields[1])) + 1);
                         strcpy(fuelDesc_value, rowFields[1]);
