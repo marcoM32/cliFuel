@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include <log.h>
 #include <curl/curl.h>
 #include <csvparser.h>
