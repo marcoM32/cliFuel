@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include <log.h>
 #include <curl/curl.h>
 #include <csvparser.h>
@@ -66,7 +67,7 @@ bool download(const char*, const char*);
 
 station_t* stationFinder(char*, char*, bool, char*);
 
-price_t* priceFinder(char*, char*, bool, station_t*);
+price_t* priceFinder(char*, char*, bool, station_t*, char*);
 
 void freeStationList(station_t*);
 

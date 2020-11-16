@@ -18,6 +18,17 @@
 
 #include "opendata.h"
 
+static char* strToLower(const char* str) {
+    if(!str)
+        return NULL;
+    char* result = malloc(sizeof(char) * strlen(str));
+    if(result) {
+        for(size_t i = 0; i <= strlen(str); i++) result[i] = tolower(str[i]);
+        return result;
+    }
+    return NULL;
+}
+
 bool download(const char* url, const char* target) {
     long http_code = 0;
     CURL *curl = NULL;
@@ -91,7 +102,7 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
     return head;
 }
 
-price_t* priceFinder(char* filename, char* separator, bool header, station_t* list) {
+price_t* priceFinder(char* filename, char* separator, bool header, station_t* list, char* type) {
     price_t *head = (price_t*) malloc(sizeof(price_t));
     if(!head)
         return NULL;
@@ -104,8 +115,10 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 5) {
                 station_t *tmp = list;
+                char *lowerType = strToLower(type);
                 while (tmp->next != NULL) {
-                    if(tmp->id == atoi(rowFields[0])) {
+                    char *name = strdup(rowFields[1]);
+                    if(tmp->id == atoi(rowFields[0]) && (!type || strstr(strToLower(name), lowerType) != NULL)) {
                         current->id = atoi(rowFields[0]);
                         char* fuelDesc_value = malloc((sizeof(char) * strlen(rowFields[1])) + 1);
                         strcpy(fuelDesc_value, rowFields[1]);
@@ -116,8 +129,10 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
                         current->next->next = NULL;
                         current = current->next;
                     }
+                    free(name);
                     tmp = tmp->next;
                 }
+                free(lowerType);
             }
             if(row) CsvParser_destroy_row(row);
         }

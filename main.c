@@ -23,15 +23,20 @@ int main(int argn, char* argv[]) {
     log_set_level(LOG_ERROR);
 
     char* query = NULL;
+    char* type = NULL;
     bool searchonly = false;
     bool ignorecache = false;
 
     char option = '\0';
-    while((option = getopt_long(argn, argv, "q:suvh", long_options, NULL)) != -1) {
+    while((option = getopt_long(argn, argv, "q:t:suvh", long_options, NULL)) != -1) {
         switch(option) {
         case 'q':
             if (optarg)
                 query = optarg;
+            break;
+        case 't':
+            if (optarg)
+                type = optarg;
             break;
         case 's':
             searchonly = true;
@@ -139,7 +144,7 @@ int main(int argn, char* argv[]) {
     }
 #endif // DEBUG
 
-    price_t* prices = priceFinder(priceFilename, FILE_SEPARATOR, FILE_HEADER, stations);
+    price_t* prices = priceFinder(priceFilename, FILE_SEPARATOR, FILE_HEADER, stations, type);
 #ifdef DEBUG
     if(prices != NULL) {
         price_t *tmp = prices;
