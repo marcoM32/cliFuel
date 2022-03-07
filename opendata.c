@@ -120,11 +120,12 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
                     char *name = strdup(rowFields[1]);
                     if(tmp->id == atoi(rowFields[0]) && (!type || strstr(strToLower(name), lowerType) != NULL)) {
                         current->id = atoi(rowFields[0]);
-                        char* fuelDesc_value = malloc((sizeof(char) * strlen(rowFields[1])) + 1);
-                        strcpy(fuelDesc_value, rowFields[1]);
-                        current->fuelDesc = fuelDesc_value;
+                        current->fuelDesc = malloc((sizeof(char) * strlen(rowFields[1])) + 1);
+                        strcpy(current->fuelDesc, rowFields[1]);
                         current->price = atof(rowFields[2]);
                         current->self = atoi(rowFields[3]);
+                        current->lastUpdate = malloc((sizeof(char) * strlen(rowFields[4])) + 1);
+                        strcpy(current->lastUpdate, rowFields[4]);
                         current->next = (price_t *) malloc(sizeof(price_t));
                         current->next->next = NULL;
                         current = current->next;
@@ -142,13 +143,15 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
 }
 
 void freeStationList(station_t* list) {
-    if(list->next)
+    if(list->next) {
         freeStationList(list->next);
+    }
     free(list);
 }
 
 void freePriceList(price_t* list) {
-    if(list->next)
+    if(list->next) {
         freePriceList(list->next);
+    }
     free(list);
 }

@@ -149,7 +149,7 @@ int main(int argn, char* argv[]) {
     if(prices != NULL) {
         price_t *tmp = prices;
         while (tmp->next != NULL) {
-            log_debug(u8"%s, %.3f euro %s\n", tmp->fuelDesc, tmp->price, tmp->self == 0 ? "non servito" : "servito");
+            log_debug(u8"%s, %.3f euro %s (%s)\n", tmp->fuelDesc, tmp->price, tmp->self == 0 ? "non servito" : "servito", tmp->lastUpdate);
             tmp = tmp->next;
         }
     }
@@ -166,13 +166,14 @@ int main(int argn, char* argv[]) {
     if(stations != NULL) {
         station_t *station = stations;
         while (station->next != NULL) {
-            if(searchonly)
+            if(searchonly) {
                 printf( //
                     u8"* %s - %s - %s\n", //
                     station->name, //
                     station->address, //
                     station->town //
                 );
+            }
             if(prices != NULL) {
                 price_t *price = prices;
                 while (price->next != NULL) {
@@ -189,10 +190,11 @@ int main(int argn, char* argv[]) {
                             }
                         } else {
                             printf( //
-                                u8"\t%s, %.3f euro %s\n", //
+                                u8"\t%s, %.3f euro %s (dato del %s)\n", //
                                 price->fuelDesc, //
                                 price->price, //
-                                price->self == 0 ? "non servito" : "servito" //
+                                price->self == 0 ? "non servito" : "servito", //
+                                price->lastUpdate //
                             );
                         }
                     }
@@ -209,14 +211,15 @@ int main(int argn, char* argv[]) {
     while ((key = map_next(&map, &iter))) {
         opendata_result_t **val = map_get(&map, key);
         printf( //
-            u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s\n", //
+            u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
             key, //
             (*val)->station->town, //
             (*val)->station->type, //
             (*val)->station->name, //
             (*val)->station->address, //
             (*val)->price->price, //
-            ((*val)->price->self == 0) ? "non servito" : "servito"
+            ((*val)->price->self == 0) ? "non servito" : "servito", //
+            (*val)->price->lastUpdate //
         );
         free(*val);
     }
