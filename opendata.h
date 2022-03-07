@@ -55,6 +55,7 @@ typedef struct price {
     char* fuelDesc;
     float price;
     bool self;
+    char* lastUpdate;
     struct price* next;
 } price_t;
 
