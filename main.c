@@ -181,7 +181,7 @@ int main(int argn, char* argv[]) {
                         if(!searchonly) {
                             opendata_result_t **val = map_get(&map, price->fuelDesc);
                             if (!val || (*val)->price->price > price->price) {
-                                opendata_result_t *item = malloc(sizeof(opendata_result_t));
+                                opendata_result_t *item = dmt_malloc(sizeof(opendata_result_t));
                                 if(!item) continue;
                                 item->station = station;
                                 item->price = price;
@@ -190,7 +190,7 @@ int main(int argn, char* argv[]) {
                             }
                         } else {
                             printf( //
-                                u8"\t%s, %.3f euro %s (dato del %s)\n", //
+                                u8"\t%s, %.3f euro %s (dato del \x1B[0m %s \e[0m)\n", //
                                 price->fuelDesc, //
                                 price->price, //
                                 price->self == 0 ? "non servito" : "servito", //
@@ -210,6 +210,14 @@ int main(int argn, char* argv[]) {
 
     while ((key = map_next(&map, &iter))) {
         opendata_result_t **val = map_get(&map, key);
+
+#ifdef COLOR
+        char *pattern = dmt_malloc(sizeof(char) * strlen((*val)->price->lastUpdate) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN));
+        if(!pattern)
+            return EXIT_FAILURE;
+        sprintf(pattern, is_old_data((*val)->price->lastUpdate) ? COLOR_START_PATTERN "%s" COLOR_END_PATTERN : "%s", (*val)->price->lastUpdate);
+#endif // COLOR
+
         printf( //
             u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
             key, //
@@ -219,9 +227,16 @@ int main(int argn, char* argv[]) {
             (*val)->station->address, //
             (*val)->price->price, //
             ((*val)->price->self == 0) ? "non servito" : "servito", //
+#ifdef COLOR
+            pattern //
+#else
             (*val)->price->lastUpdate //
+#endif // COLOR
         );
-        free(*val);
+#ifdef COLOR
+        dmt_free(pattern);
+#endif // COLOR
+        dmt_free(*val);
     }
 
 #ifdef NO_CACHE
@@ -234,8 +249,6 @@ int main(int argn, char* argv[]) {
 
     map_deinit(&map);
 
-    free(anagrafiaFilename);
-    free(priceFilename);
     freeStationList(stations);
     freePriceList(prices);
 
