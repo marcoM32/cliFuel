@@ -7,15 +7,22 @@ clean() {
 	rm -Rfv ./CsvParser/ > /dev/null;
 	rm -Rfv ./progressbar/ > /dev/null;
 	rm -f *.o *.so > /dev/null;
+	rm -Rfv ./dmt/ > /dev/null;
 }
 
-while getopts 'c' OPTION; do
+DEBUG="";
+
+while getopts 'cd' OPTION; do
     case "$OPTION" in
         c)
             echo "starting project cleaning...";
 			clean;
 			echo "finish";
             exit 0;
+			;;
+		d)
+			$DEBUG="-g";
+			;;
     esac
 done
 
@@ -58,23 +65,33 @@ if [ ! -d "./progressbar/" ]; then
   git clone https://github.com/doches/progressbar.git;
 fi
 
-gcc -Wall -g -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
+if [ ! -d "./dmt/" ]; then
+  git clone https://github.com/rxi/dmt.git;
+fi
+
+gcc -Wall $DEBUG -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
 ar -rcs ./map/librximap.a ./map/map.o;
 
-gcc -Wall -g -DLOG_USE_COLOR -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
+gcc -Wall $DEBUG -DLOG_USE_COLOR -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
 ar -rcs ./log.c/librxilog.a ./log.c/log.o;
 
-gcc -Wall -g -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
-gcc -Wall -g -I./CsvParser/include/ -O2 -shared ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.so;
+gcc -Wall $DEBUG -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
+gcc -Wall $DEBUG -I./CsvParser/include/ -O2 -shared ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.so;
 ar -rcs ./CsvParser/libcsvparser.a ./CsvParser/csvparser.o;
 
-gcc -Wall -g -I./progressbar/include/progressbar/ -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
-gcc -Wall -g -I./progressbar/include/progressbar/ -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
+gcc -Wall $DEBUG -I./progressbar/include/progressbar/ -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
+gcc -Wall $DEBUG -I./progressbar/include/progressbar/ -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
 ar -rcs ./progressbar/libprogressbar.a ./progressbar/lib/progressbar.o ./progressbar/lib/statusbar.o;
 
-gcc -Wall -DFILE_DOWNLOAD -DANIMATION -g -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -c main.c -o main.o;
-gcc -Wall -DFILE_DOWNLOAD -DANIMATION -g -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -c opendata.c -o opendata.o;
-gcc -L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -o $BUILD_DIR/cliFuel main.o opendata.o -O3 -lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lpthread;
+gcc -Wall $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
+ar -rcs ./dmt/librxidmt.a ./dmt/dmt.o;
+
+SYMBOLS="-DFILE_DOWNLOAD -DANIMATION -DCOLOR";
+LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lrxidmt -lpthread";
+
+gcc -Wall $SYMBOLS $DEBUG -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src -c main.c -o main.o;
+gcc -Wall $SYMBOLS $DEBUG -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src -c opendata.c -o opendata.o;
+gcc -L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -L./dmt/ -o $BUILD_DIR/cliFuel main.o opendata.o -O3 $LIBRARIES;
 
 chmod +x $BUILD_DIR/cliFuel;
 

@@ -19,14 +19,23 @@
 #ifndef OPENDATA_H_INCLUDED
 #define OPENDATA_H_INCLUDED
 
+#ifdef COLOR
+#define _GNU_SOURCE 1
+#endif // COLOR
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <log.h>
+#include <dmt.h>
 #include <curl/curl.h>
 #include <csvparser.h>
+
+#ifdef COLOR
+#include <time.h>
+#endif // COLOR
 
 #define CACHE_DIR "cache"
 
@@ -73,5 +82,9 @@ price_t* priceFinder(char*, char*, bool, station_t*, char*);
 void freeStationList(station_t*);
 
 void freePriceList(price_t*);
+
+#ifdef COLOR
+    bool is_old_data(const char*);
+#endif // COLOR
 
 #endif // OPENDATA_H_INCLUDED

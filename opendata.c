@@ -21,7 +21,7 @@
 static char* strToLower(const char* str) {
     if(!str)
         return NULL;
-    char* result = malloc(sizeof(char) * strlen(str));
+    char* result = dmt_malloc(sizeof(char) * strlen(str));
     if(result) {
         for(size_t i = 0; i <= strlen(str); i++) result[i] = tolower(str[i]);
         return result;
@@ -73,9 +73,14 @@ bool download(const char* url, const char* target) {
 }
 
 station_t* stationFinder(char* filename, char* separator, bool header, char* query) {
-    station_t *head = (station_t*) malloc(sizeof(station_t));
+    station_t *head = (station_t*) dmt_malloc(sizeof(station_t));
     if(!head)
         return NULL;
+    head->id = 0;
+    head->name = NULL;
+    head->type = NULL;
+    head->address = NULL;
+    head->town = NULL;
     head->next = NULL;
     CsvParser *csvparser = CsvParser_new(filename, separator, header);
     if(csvparser) {
@@ -90,7 +95,7 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
                     current->type = strdup(rowFields[2]);
                     current->address = strdup(rowFields[5]);
                     current->town = strdup(rowFields[6]);
-                    current->next = (station_t *) malloc(sizeof(station_t));
+                    current->next = (station_t *) dmt_malloc(sizeof(station_t));
                     current->next->next = NULL;
                     current = current->next;
                 }
@@ -103,7 +108,7 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
 }
 
 price_t* priceFinder(char* filename, char* separator, bool header, station_t* list, char* type) {
-    price_t *head = (price_t*) malloc(sizeof(price_t));
+    price_t *head = (price_t*) dmt_malloc(sizeof(price_t));
     if(!head)
         return NULL;
     head->next = NULL;
@@ -120,20 +125,17 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
                     char *name = strdup(rowFields[1]);
                     if(tmp->id == atoi(rowFields[0]) && (!type || strstr(strToLower(name), lowerType) != NULL)) {
                         current->id = atoi(rowFields[0]);
-                        current->fuelDesc = malloc((sizeof(char) * strlen(rowFields[1])) + 1);
-                        strcpy(current->fuelDesc, rowFields[1]);
+                        current->fuelDesc = strdup(rowFields[1]);
                         current->price = atof(rowFields[2]);
                         current->self = atoi(rowFields[3]);
-                        current->lastUpdate = malloc((sizeof(char) * strlen(rowFields[4])) + 1);
-                        strcpy(current->lastUpdate, rowFields[4]);
-                        current->next = (price_t *) malloc(sizeof(price_t));
+                        current->lastUpdate = strdup(rowFields[4]);
+                        current->next = (price_t *) dmt_malloc(sizeof(price_t));
                         current->next->next = NULL;
                         current = current->next;
                     }
-                    free(name);
                     tmp = tmp->next;
                 }
-                free(lowerType);
+                dmt_free(lowerType);
             }
             if(row) CsvParser_destroy_row(row);
         }
@@ -146,12 +148,37 @@ void freeStationList(station_t* list) {
     if(list->next) {
         freeStationList(list->next);
     }
-    free(list);
+    dmt_free(list);
 }
 
 void freePriceList(price_t* list) {
     if(list->next) {
         freePriceList(list->next);
     }
-    free(list);
+    dmt_free(list);
 }
+
+#ifdef COLOR
+bool is_old_data(const char* data) {
+
+    if(!data)
+        return false;
+
+    struct tm param = {0};
+    char *s = strptime(data, "%d/%m/%Y %H:%M:%S", &param);
+    if (s == NULL) {
+        log_error("strptime() failed: %s", data);
+        return false;
+    }
+
+    time_t now = time(NULL);
+    if (now == -1) {
+        log_error("time(NULL) failed");
+        return false;
+    }
+
+    return difftime(mktime(localtime(&now)), mktime(&param)) > 259200; // 3 deys
+}
+#endif // COLOR
+
+

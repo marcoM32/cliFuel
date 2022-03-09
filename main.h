@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <getopt.h>
 #include <map.h>
+#include <dmt.h>
 #ifdef FILE_DOWNLOAD
 #include <time.h>
 #include <unistd.h>
@@ -45,6 +46,11 @@
 #include "opendata.h"
 
 #define PROGRAM_VERSION "v0.02"
+
+#ifdef COLOR
+#define COLOR_START_PATTERN "\e[1;31m"
+#define COLOR_END_PATTERN "\e[0m"
+#endif // COLOR
 
 static struct option long_options[] = {
     { "query", required_argument, NULL, 'q' },
