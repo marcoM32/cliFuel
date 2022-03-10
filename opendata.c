@@ -21,9 +21,11 @@
 static char* strToLower(const char* str) {
     if(!str)
         return NULL;
-    char* result = dmt_malloc(sizeof(char) * strlen(str));
+    size_t len = strlen(str) + 1;
+    char* result = dmt_malloc(sizeof(char) * len);
+    memcpy(result, str, len);
     if(result) {
-        for(size_t i = 0; i <= strlen(str); i++) result[i] = tolower(str[i]);
+        for (size_t i = 0; result[i] != '\0'; i++) result[i] = tolower(result[i]);
         return result;
     }
     return NULL;
@@ -76,11 +78,6 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
     station_t *head = (station_t*) dmt_malloc(sizeof(station_t));
     if(!head)
         return NULL;
-    head->id = 0;
-    head->name = NULL;
-    head->type = NULL;
-    head->address = NULL;
-    head->town = NULL;
     head->next = NULL;
     CsvParser *csvparser = CsvParser_new(filename, separator, header);
     if(csvparser) {
@@ -116,14 +113,14 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
     if(csvparser) {
         CsvRow *row = NULL;
         price_t *current = head;
+        char *lowerType = strToLower(type);
         while ((row = CsvParser_getRow(csvparser))) {
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 5) {
                 station_t *tmp = list;
-                char *lowerType = strToLower(type);
                 while (tmp->next != NULL) {
-                    char *name = strdup(rowFields[1]);
-                    if(tmp->id == atoi(rowFields[0]) && (!type || strstr(strToLower(name), lowerType) != NULL)) {
+                    char *lowerName = strToLower(rowFields[1]);
+                    if(tmp->id == atoi(rowFields[0]) && (!type || strstr(lowerName, lowerType) != NULL)) {
                         current->id = atoi(rowFields[0]);
                         current->fuelDesc = strdup(rowFields[1]);
                         current->price = atof(rowFields[2]);
@@ -134,11 +131,12 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
                         current = current->next;
                     }
                     tmp = tmp->next;
+                    if(lowerName) dmt_free(lowerName);
                 }
-                dmt_free(lowerType);
             }
             if(row) CsvParser_destroy_row(row);
         }
+        if(lowerType) dmt_free(lowerType);
         if(csvparser) CsvParser_destroy(csvparser);
     }
     return head;
@@ -178,6 +176,14 @@ bool is_old_data(const char* data) {
     }
 
     return difftime(mktime(localtime(&now)), mktime(&param)) > 259200; // 3 deys
+}
+
+char* make_alert(const char *value) {
+    char *pattern = dmt_malloc(sizeof(char) * strlen(value) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN));
+    if(!pattern)
+        return "";
+    sprintf(pattern, is_old_data(value) ? COLOR_START_PATTERN "%s" COLOR_END_PATTERN : "%s", value);
+    return pattern;
 }
 #endif // COLOR
 

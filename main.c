@@ -31,23 +31,16 @@ int main(int argn, char* argv[]) {
     while((option = getopt_long(argn, argv, "q:t:suvh", long_options, NULL)) != -1) {
         switch(option) {
         case 'q':
-            if (optarg)
-                query = optarg;
+            if (optarg) query = optarg;
             break;
         case 't':
-            if (optarg)
-                type = optarg;
+            if (optarg) type = optarg;
             break;
         case 's':
             searchonly = true;
-            log_debug("Modalita' di sola ricerca impianti");
             break;
         case 'u':
             ignorecache = true;
-            log_debug("Modalita' ignore cache attiva");
-#ifdef NO_CACHE
-            log_debug("Build type NO_CACHE");
-#endif // NO_CACHE
             break;
         case 'v':
             log_set_level(LOG_DEBUG);
@@ -74,6 +67,21 @@ int main(int argn, char* argv[]) {
     if(!query) {
         printf("Nessuna query specificata, impossibile proseguire");
         exit(EXIT_SUCCESS);
+    }
+
+    if(type) {
+        log_debug("Filtro tipologia carburante: %s", type);
+    }
+
+    if(searchonly) {
+        log_debug("Modalita' di sola ricerca impianti");
+    }
+
+    if(ignorecache) {
+        log_debug("Modalita' ignore cache attiva");
+#ifdef NO_CACHE
+        log_warn("Tipo di build gia' NO_CACHE");
+#endif // NO_CACHE
     }
 
     struct stat st = {0};
@@ -163,7 +171,7 @@ int main(int argn, char* argv[]) {
     opendata_map_t map;
     map_init(&map);
 
-    if(stations != NULL) {
+    if(stations) {
         station_t *station = stations;
         while (station->next != NULL) {
             if(searchonly) {
@@ -189,13 +197,23 @@ int main(int argn, char* argv[]) {
                                 log_debug(u8"Aggiunta categoria alla mappa di ricerca: %s", price->fuelDesc);
                             }
                         } else {
+#ifdef COLOR
+                        char *alert = make_alert(price->lastUpdate);
+#endif // COLOR
                             printf( //
-                                u8"\t%s, %.3f euro %s (dato del \x1B[0m %s \e[0m)\n", //
+                                u8"\t%s, %.3f euro %s (dato del %s)\n", //
                                 price->fuelDesc, //
                                 price->price, //
                                 price->self == 0 ? "non servito" : "servito", //
+#ifdef COLOR
+                                alert //
+#else
                                 price->lastUpdate //
+#endif // COLOR
                             );
+#ifdef COLOR
+                            dmt_free(alert);
+#endif // COLOR
                         }
                     }
                     price = price->next;
@@ -210,14 +228,9 @@ int main(int argn, char* argv[]) {
 
     while ((key = map_next(&map, &iter))) {
         opendata_result_t **val = map_get(&map, key);
-
 #ifdef COLOR
-        char *pattern = dmt_malloc(sizeof(char) * strlen((*val)->price->lastUpdate) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN));
-        if(!pattern)
-            return EXIT_FAILURE;
-        sprintf(pattern, is_old_data((*val)->price->lastUpdate) ? COLOR_START_PATTERN "%s" COLOR_END_PATTERN : "%s", (*val)->price->lastUpdate);
+        char *alert = make_alert((*val)->price->lastUpdate);
 #endif // COLOR
-
         printf( //
             u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
             key, //
@@ -228,13 +241,13 @@ int main(int argn, char* argv[]) {
             (*val)->price->price, //
             ((*val)->price->self == 0) ? "non servito" : "servito", //
 #ifdef COLOR
-            pattern //
+            alert //
 #else
             (*val)->price->lastUpdate //
 #endif // COLOR
         );
 #ifdef COLOR
-        dmt_free(pattern);
+        dmt_free(alert);
 #endif // COLOR
         dmt_free(*val);
     }
@@ -251,6 +264,10 @@ int main(int argn, char* argv[]) {
 
     freeStationList(stations);
     freePriceList(prices);
+
+#ifdef DEBUG
+    dmt_dump(stdout);
+#endif // DEBUG
 
     return EXIT_SUCCESS;
 }
@@ -277,6 +294,7 @@ static void * progress(void *argc) {
 static void helpme() {
   printf("Parametri:\n\n"
 	"\t-q --query --> Comune di ricerca\n"
+	"\t-t --type --> Filtro tipologia carburante\n"
 	"\t-s --search-only --> Ricerca semplice\n"
     "\t-u --ignore-cache --> Ignora la cache\n"
     "\t-v --verbose --> Log verboso\n"

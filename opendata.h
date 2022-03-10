@@ -50,6 +50,11 @@
 #define FILE_SEPARATOR ";"
 #define FILE_HEADER false
 
+#ifdef COLOR
+#define COLOR_START_PATTERN "\e[1;31m"
+#define COLOR_END_PATTERN "\e[0m"
+#endif // COLOR
+
 typedef struct station {
     int id;
     char* name;
@@ -85,6 +90,8 @@ void freePriceList(price_t*);
 
 #ifdef COLOR
     bool is_old_data(const char*);
+
+    char* make_alert(const char*);
 #endif // COLOR
 
 #endif // OPENDATA_H_INCLUDED

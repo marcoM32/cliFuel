@@ -47,13 +47,9 @@
 
 #define PROGRAM_VERSION "v0.02"
 
-#ifdef COLOR
-#define COLOR_START_PATTERN "\e[1;31m"
-#define COLOR_END_PATTERN "\e[0m"
-#endif // COLOR
-
 static struct option long_options[] = {
     { "query", required_argument, NULL, 'q' },
+    { "type", required_argument, NULL, 't' },
     { "search-only", no_argument, NULL, 's' },
     { "ignore-cache", no_argument, NULL, 'u' },
     { "verbose", no_argument, NULL, 'v' },
