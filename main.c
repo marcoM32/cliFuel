@@ -157,7 +157,7 @@ int main(int argn, char* argv[]) {
     if(prices != NULL) {
         price_t *tmp = prices;
         while (tmp->next != NULL) {
-            log_debug(u8"%s, %.3f euro %s (%s)\n", tmp->fuelDesc, tmp->price, tmp->self == 0 ? "non servito" : "servito", tmp->lastUpdate);
+            log_debug(u8"%s, %.3f euro %s (%s)\n", tmp->fuelDesc, tmp->price, tmp->self == NOT_SELF ? "non servito" : "servito", tmp->lastUpdate);
             tmp = tmp->next;
         }
     }
@@ -204,7 +204,7 @@ int main(int argn, char* argv[]) {
                                 u8"\t%s, %.3f euro %s (dato del %s)\n", //
                                 price->fuelDesc, //
                                 price->price, //
-                                price->self == 0 ? "non servito" : "servito", //
+                                price->self == NOT_SELF ? "non servito" : "servito", //
 #ifdef COLOR
                                 alert //
 #else
@@ -239,7 +239,7 @@ int main(int argn, char* argv[]) {
             (*val)->station->name, //
             (*val)->station->address, //
             (*val)->price->price, //
-            ((*val)->price->self == 0) ? "non servito" : "servito", //
+            ((*val)->price->self == NOT_SELF) ? "non servito" : "servito", //
 #ifdef COLOR
             alert //
 #else

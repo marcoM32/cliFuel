@@ -6,7 +6,6 @@ clean() {
 	rm -Rfv ./map/ > /dev/null;
 	rm -Rfv ./CsvParser/ > /dev/null;
 	rm -Rfv ./progressbar/ > /dev/null;
-	rm -f *.o *.so > /dev/null;
 	rm -Rfv ./dmt/ > /dev/null;
 }
 
@@ -18,7 +17,7 @@ while getopts 'cd' OPTION; do
             echo "starting project cleaning...";
 			clean;
 			echo "finish";
-            exit 0;
+            		exit 0;
 			;;
 		d)
 			$DEBUG="-g";
@@ -45,6 +44,7 @@ dpkg -s "libncurses5-dev" >/dev/null 2>&1 && {
 BUILD_DIR="./bin/linux";
 echo "Build dir: $BUILD_DIR";
 
+rm -f *.o *.so > /dev/null;
 rm -Rf $BUILD_DIR;
 mkdir -p $BUILD_DIR;
 
