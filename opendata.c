@@ -61,12 +61,16 @@ bool download(const char* url, const char* target) {
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
             res = curl_easy_perform(curl);
             if(res != CURLE_OK)
-                log_error("curl_easy_perform() failed: %s", curl_easy_strerror(res));
+                log_error("curl_easy_perform() fallita: %s", curl_easy_strerror(res));
 
             curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
-            if(http_code != 200)
-                log_error("I'azione e\' finita in errore %d", http_code);
+
             fclose(file);
+
+            if(http_code != 200) {
+                log_error("Connessione con endpoint ko %d", http_code);
+                remove(target);
+            }
         }
     }
 
@@ -145,15 +149,19 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
 void freeStationList(station_t* list) {
     if(list->next) {
         freeStationList(list->next);
+        list->next = NULL;
     }
     dmt_free(list);
+    list = NULL;
 }
 
 void freePriceList(price_t* list) {
     if(list->next) {
         freePriceList(list->next);
+        list->next = NULL;
     }
     dmt_free(list);
+    list = NULL;
 }
 
 #ifdef COLOR

@@ -55,6 +55,8 @@
 #define COLOR_END_PATTERN "\e[0m"
 #endif // COLOR
 
+enum service {SELF = 0, NOT_SELF};
+
 typedef struct station {
     int id;
     char* name;
@@ -68,7 +70,7 @@ typedef struct price {
     int id;
     char* fuelDesc;
     float price;
-    bool self;
+    enum service self;
     char* lastUpdate;
     struct price* next;
 } price_t;
