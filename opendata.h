@@ -1,6 +1,6 @@
 /**
  * cliFuel
- * Copyright (C) 2020 Marco Magliano
+ * Copyright (C) 2020-2022 Marco Magliano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,9 +91,9 @@ void freeStationList(station_t*);
 void freePriceList(price_t*);
 
 #ifdef COLOR
-    bool is_old_data(const char*);
+bool is_old_data(const char*);
 
-    char* make_alert(const char*);
+char* make_alert(const char*);
 #endif // COLOR
 
 #endif // OPENDATA_H_INCLUDED

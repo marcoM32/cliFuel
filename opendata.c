@@ -1,6 +1,6 @@
 /**
  * cliFuel
- * Copyright (C) 2020 Marco Magliano
+ * Copyright (C) 2020-2022 Marco Magliano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,20 @@
 
 #include "opendata.h"
 
-static char* strToLower(const char* str) {
+static char* strCopy(const char* str) {
     if(!str)
         return NULL;
     size_t len = strlen(str) + 1;
     char* result = dmt_malloc(sizeof(char) * len);
     memcpy(result, str, len);
+    result[len - 1] = '\0';
+    return result;
+}
+
+static char* strToLower(const char* str) {
+    char* result = strCopy(str);
     if(result) {
-        for (size_t i = 0; result[i] != '\0'; i++) result[i] = tolower(result[i]);
+        for (size_t i = 0; result[i] != '\0'; i++) if(isupper(result[i])) result[i] = tolower(result[i]);
         return result;
     }
     return NULL;
@@ -79,69 +85,77 @@ bool download(const char* url, const char* target) {
 }
 
 station_t* stationFinder(char* filename, char* separator, bool header, char* query) {
-    station_t *head = (station_t*) dmt_malloc(sizeof(station_t));
-    if(!head)
-        return NULL;
-    head->next = NULL;
+    station_t *head = NULL;
     CsvParser *csvparser = CsvParser_new(filename, separator, header);
     if(csvparser) {
         CsvRow *row = NULL;
-        station_t *current = head;
         while ((row = CsvParser_getRow(csvparser))) {
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 10) {
                 if(strcasecmp(rowFields[6], query) == 0) {
+                    station_t *current = (station_t *) dmt_malloc(sizeof(station_t));
                     current->id = atoi(rowFields[0]);
-                    current->name = strdup(rowFields[1]);
-                    current->type = strdup(rowFields[2]);
-                    current->address = strdup(rowFields[5]);
-                    current->town = strdup(rowFields[6]);
-                    current->next = (station_t *) dmt_malloc(sizeof(station_t));
-                    current->next->next = NULL;
-                    current = current->next;
+                    current->name = strCopy(rowFields[1]);
+                    current->type = strCopy(rowFields[2]);
+                    current->address = strCopy(rowFields[5]);
+                    current->town = strCopy(rowFields[6]);
+                    current->next = NULL;
+                    if(!head) {
+                        head = current;
+                    } else {
+                        station_t *stmp = head;
+                        while(stmp->next) {
+                            stmp = stmp->next;
+                        }
+                        stmp->next = current;
+                    }
                 }
             }
-            if(row) CsvParser_destroy_row(row);
+            CsvParser_destroy_row(row);
         }
-        if(csvparser) CsvParser_destroy(csvparser);
+        CsvParser_destroy(csvparser);
     }
     return head;
 }
 
 price_t* priceFinder(char* filename, char* separator, bool header, station_t* list, char* type) {
-    price_t *head = (price_t*) dmt_malloc(sizeof(price_t));
-    if(!head)
-        return NULL;
-    head->next = NULL;
+    price_t *head = NULL;
     CsvParser *csvparser = CsvParser_new(filename, separator, header);
     if(csvparser) {
         CsvRow *row = NULL;
-        price_t *current = head;
         char *lowerType = strToLower(type);
         while ((row = CsvParser_getRow(csvparser))) {
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 5) {
                 station_t *tmp = list;
-                while (tmp->next != NULL) {
+                while (tmp) {
                     char *lowerName = strToLower(rowFields[1]);
                     if(tmp->id == atoi(rowFields[0]) && (!type || strstr(lowerName, lowerType) != NULL)) {
+                        price_t *current = (price_t *) dmt_malloc(sizeof(price_t));
                         current->id = atoi(rowFields[0]);
-                        current->fuelDesc = strdup(rowFields[1]);
+                        current->fuelDesc = strCopy(rowFields[1]);
                         current->price = atof(rowFields[2]);
                         current->self = atoi(rowFields[3]);
-                        current->lastUpdate = strdup(rowFields[4]);
-                        current->next = (price_t *) dmt_malloc(sizeof(price_t));
-                        current->next->next = NULL;
-                        current = current->next;
+                        current->lastUpdate = strCopy(rowFields[4]);
+                        current->next = NULL;
+                        if(!head) {
+                            head = current;
+                        } else {
+                            price_t *ptmp = head;
+                            while(ptmp->next) {
+                                ptmp = ptmp->next;
+                            }
+                            ptmp->next = current;
+                        }
                     }
-                    tmp = tmp->next;
                     if(lowerName) dmt_free(lowerName);
+                    tmp = tmp->next;
                 }
             }
-            if(row) CsvParser_destroy_row(row);
+            CsvParser_destroy_row(row);
         }
         if(lowerType) dmt_free(lowerType);
-        if(csvparser) CsvParser_destroy(csvparser);
+        CsvParser_destroy(csvparser);
     }
     return head;
 }
@@ -151,6 +165,27 @@ void freeStationList(station_t* list) {
         freeStationList(list->next);
         list->next = NULL;
     }
+
+    if(list->address) {
+        dmt_free(list->address);
+        list->address = NULL;
+    }
+
+    if(list->name) {
+        dmt_free(list->name);
+        list->name = NULL;
+    }
+
+    if(list->town) {
+        dmt_free(list->town);
+        list->town = NULL;
+    }
+
+    if(list->type) {
+        dmt_free(list->type);
+        list->type = NULL;
+    }
+
     dmt_free(list);
     list = NULL;
 }
@@ -160,6 +195,17 @@ void freePriceList(price_t* list) {
         freePriceList(list->next);
         list->next = NULL;
     }
+
+    if(list->fuelDesc) {
+        dmt_free(list->fuelDesc);
+        list->fuelDesc = NULL;
+    }
+
+    if(list->lastUpdate) {
+        dmt_free(list->lastUpdate);
+        list->lastUpdate = NULL;
+    }
+
     dmt_free(list);
     list = NULL;
 }
