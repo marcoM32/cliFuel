@@ -1,6 +1,6 @@
 /**
  * cliFuel
- * Copyright (C) 2020 Marco Magliano
+ * Copyright (C) 2020-2022 Marco Magliano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,13 +48,13 @@ int main(int argn, char* argv[]) {
         case 'h':
             fprintf(stdout, "%s %s\n"
                     "\n"
-                    "Copyright (C) 2020 Marco Magliano Free Software Foundation, Inc.\n"
+                    "Copyright (C) 2020-2022 Marco Magliano Free Software Foundation, Inc.\n"
                     "This is free software; see the source for copying conditions.\n"
                     "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A\n"
                     "PARTICULAR PURPOSE.\n"
                     "\n"
                     "Buildtime: %s - %s\n\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
-                    helpme();
+            helpme();
             exit(EXIT_SUCCESS);
             break;
         case '?':
@@ -141,11 +141,21 @@ int main(int argn, char* argv[]) {
 
 #endif // FILE_DOWNLOAD
 
+    // Se i file ancora non esistono...
+    if(!(access(anagrafiaFilename, F_OK ) != -1) || !(access(priceFilename, F_OK ) != -1)) {
+        log_error("File non presenti, impossibile proseguire");
+        exit(EXIT_FAILURE);
+    }
+
     station_t* stations = stationFinder(anagrafiaFilename, FILE_SEPARATOR, FILE_HEADER, query);
+    if(!stations) {
+        log_error("Impossibile indicizzare le stazioni");
+        exit(EXIT_FAILURE);
+    }
 #ifdef DEBUG
-    if(stations != NULL) {
+    if(stations) {
         station_t *tmp = stations;
-        while (tmp->next != NULL) {
+        while (tmp) {
             log_debug(u8"%d - %s - %s - %s\n", tmp->id, tmp->name, tmp->address, tmp->town);
             tmp = tmp->next;
         }
@@ -153,10 +163,14 @@ int main(int argn, char* argv[]) {
 #endif // DEBUG
 
     price_t* prices = priceFinder(priceFilename, FILE_SEPARATOR, FILE_HEADER, stations, type);
+    if(!prices) {
+        log_error("Impossibile indicizzare i prezzi");
+        exit(EXIT_FAILURE);
+    }
 #ifdef DEBUG
-    if(prices != NULL) {
+    if(prices) {
         price_t *tmp = prices;
-        while (tmp->next != NULL) {
+        while (tmp) {
             log_debug(u8"%s, %.3f euro %s (%s)\n", tmp->fuelDesc, tmp->price, tmp->self == NOT_SELF ? "non servito" : "servito", tmp->lastUpdate);
             tmp = tmp->next;
         }
@@ -173,7 +187,7 @@ int main(int argn, char* argv[]) {
 
     if(stations) {
         station_t *station = stations;
-        while (station->next != NULL) {
+        while (station) {
             if(searchonly) {
                 printf( //
                     u8"* %s - %s - %s\n", //
@@ -184,11 +198,12 @@ int main(int argn, char* argv[]) {
             }
             if(prices != NULL) {
                 price_t *price = prices;
-                while (price->next != NULL) {
+                while (price) {
                     if(price->id == station->id) {
                         if(!searchonly) {
                             opendata_result_t **val = map_get(&map, price->fuelDesc);
                             if (!val || (*val)->price->price > price->price) {
+                                if(val) dmt_free(*val); // Elemento precedente già in mappa
                                 opendata_result_t *item = dmt_malloc(sizeof(opendata_result_t));
                                 if(!item) continue;
                                 item->station = station;
@@ -198,7 +213,7 @@ int main(int argn, char* argv[]) {
                             }
                         } else {
 #ifdef COLOR
-                        char *alert = make_alert(price->lastUpdate);
+                            char *alert = make_alert(price->lastUpdate);
 #endif // COLOR
                             printf( //
                                 u8"\t%s, %.3f euro %s (dato del %s)\n", //
@@ -292,11 +307,11 @@ static void * progress(void *argc) {
 #endif // ANIMATION
 
 static void helpme() {
-  printf("Parametri:\n\n"
-	"\t-q --query --> Comune di ricerca\n"
-	"\t-t --type --> Filtro tipologia carburante\n"
-	"\t-s --search-only --> Ricerca semplice\n"
-    "\t-u --ignore-cache --> Ignora la cache\n"
-    "\t-v --verbose --> Log verboso\n"
-    "\t-h --help --> Visualizza questo aiuto\n");
+    printf("Parametri:\n\n"
+           "\t-q --query --> Comune di ricerca\n"
+           "\t-t --type --> Filtro tipologia carburante\n"
+           "\t-s --search-only --> Ricerca semplice\n"
+           "\t-u --ignore-cache --> Ignora la cache\n"
+           "\t-v --verbose --> Log verboso\n"
+           "\t-h --help --> Visualizza questo aiuto\n");
 }

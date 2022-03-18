@@ -1,6 +1,6 @@
 /**
  * cliFuel
- * Copyright (C) 2020 Marco Magliano
+ * Copyright (C) 2020-2022 Marco Magliano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@
 #include <dmt.h>
 #ifdef FILE_DOWNLOAD
 #include <time.h>
-#include <unistd.h>
 #endif // FILE_DOWNLOAD
+#include <unistd.h>
 #ifdef ANIMATION
 #ifdef _WIN32
 #include <Windows.h>
