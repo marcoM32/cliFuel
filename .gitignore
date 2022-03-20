@@ -1,7 +1,14 @@
-/bin/*
-/obj/*
+bin/
+obj/
 *.cbp
 *.depend
 *.layout
 *.csv
 *.cscope_file_list
+CsvParser/
+map/
+log.c/
+progressbar/
+dmt/
+*.zip
+*.o

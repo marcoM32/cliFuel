@@ -37,6 +37,7 @@ $ ./cliFuel -q roma
 3. https://github.com/rxi/log.c
 4. https://github.com/rxi/map
 5. https://github.com/doches/progressbar
+6. https://github.com/rxi/dmt
 
 ## License
 
