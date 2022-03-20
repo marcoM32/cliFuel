@@ -20,7 +20,7 @@ while getopts 'cd' OPTION; do
             		exit 0;
 			;;
 		d)
-			$DEBUG="-g";
+			DEBUG="-g";
 			;;
     esac
 done
@@ -87,6 +87,12 @@ gcc -Wall $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
 ar -rcs ./dmt/librxidmt.a ./dmt/dmt.o;
 
 SYMBOLS="-DFILE_DOWNLOAD -DANIMATION -DCOLOR";
+
+if [ -n "${DEBUG}" ]; then
+  echo "Active debug build...";
+  SYMBOLS+=' -DDEBUG';
+fi
+
 LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lrxidmt -lpthread";
 
 gcc -Wall $SYMBOLS $DEBUG -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src -c main.c -o main.o;
