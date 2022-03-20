@@ -41,6 +41,12 @@ dpkg -s "libncurses5-dev" >/dev/null 2>&1 && {
         exit -1;
 }
 
+dpkg -s "astyle" >/dev/null 2>&1 && {
+        eval "astyle --style=java --style=attach -A2 --suffix=none ./*.c,*.h";
+} || {
+        echo "formatting source is not possible";
+}
+
 BUILD_DIR="./bin/linux";
 echo "Build dir: $BUILD_DIR";
 
