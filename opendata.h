@@ -72,6 +72,7 @@ typedef struct price {
     float price;
     enum service self;
     char* lastUpdate;
+    bool is_old;
     struct price* next;
 } price_t;
 
@@ -90,10 +91,10 @@ void freeStationList(station_t*);
 
 void freePriceList(price_t*);
 
-#ifdef COLOR
 bool is_old_data(const char*);
 
-char* make_alert(const char*);
+#ifdef COLOR
+char* make_alert(const price_t*);
 #endif // COLOR
 
 #endif // OPENDATA_H_INCLUDED

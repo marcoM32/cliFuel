@@ -137,6 +137,7 @@ price_t* priceFinder(char* filename, char* separator, bool header, station_t* li
                         current->price = atof(rowFields[2]);
                         current->self = atoi(rowFields[3]);
                         current->lastUpdate = strCopy(rowFields[4]);
+                        current->is_old = is_old_data(current->lastUpdate);
                         current->next = NULL;
                         if(!head) {
                             head = current;
@@ -210,7 +211,6 @@ void freePriceList(price_t* list) {
     list = NULL;
 }
 
-#ifdef COLOR
 bool is_old_data(const char* data) {
 
     if(!data)
@@ -232,11 +232,12 @@ bool is_old_data(const char* data) {
     return difftime(mktime(localtime(&now)), mktime(&param)) > 259200; // 3 deys
 }
 
-char* make_alert(const char *value) {
-    char *pattern = dmt_malloc(sizeof(char) * strlen(value) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN) + 1); // + \0
-    if(!pattern)
-        return "";
-    sprintf(pattern, is_old_data(value) ? COLOR_START_PATTERN "%s" COLOR_END_PATTERN : "%s", value);
+#ifdef COLOR
+char* make_alert(const price_t *price) { // FIXME
+    if(!price) return NULL;
+    char *pattern = dmt_malloc(sizeof(char) * strlen(price->lastUpdate) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN) + 1); // + \0
+    if(!pattern) return NULL;
+    sprintf(pattern, price->is_old ? COLOR_START_PATTERN "%s" COLOR_END_PATTERN : "%s", price->lastUpdate);
     return pattern;
 }
 #endif // COLOR

@@ -26,9 +26,10 @@ int main(int argn, char* argv[]) {
     char* type = NULL;
     bool searchonly = false;
     bool ignorecache = false;
+    bool ignoreold = false;
 
     char option = '\0';
-    while((option = getopt_long(argn, argv, "q:t:suvh", long_options, NULL)) != -1) {
+    while((option = getopt_long(argn, argv, "q:t:suovh", long_options, NULL)) != -1) {
         switch(option) {
         case 'q':
             if (optarg) query = optarg;
@@ -41,6 +42,9 @@ int main(int argn, char* argv[]) {
             break;
         case 'u':
             ignorecache = true;
+            break;
+        case 'o':
+            ignoreold = true;
             break;
         case 'v':
             log_set_level(LOG_DEBUG);
@@ -82,6 +86,10 @@ int main(int argn, char* argv[]) {
 #ifdef NO_CACHE
         log_warn("Tipo di build gia' NO_CACHE");
 #endif // NO_CACHE
+    }
+
+    if(ignoreold) {
+        log_debug("Modalita' ignore old attiva");
     }
 
     struct stat st = {0};
@@ -200,35 +208,37 @@ int main(int argn, char* argv[]) {
                 price_t *price = prices;
                 while (price) {
                     if(price->id == station->id) {
-                        if(!searchonly) {
-                            opendata_result_t **val = map_get(&map, price->fuelDesc);
-                            if (!val || (*val)->price->price > price->price) {
-                                if(val) dmt_free(*val); // Elemento precedente già in mappa
-                                opendata_result_t *item = dmt_malloc(sizeof(opendata_result_t));
-                                if(!item) continue;
-                                item->station = station;
-                                item->price = price;
-                                map_set(&map, price->fuelDesc, item);
-                                log_debug(u8"Aggiunta categoria alla mappa di ricerca: %s", price->fuelDesc);
-                            }
-                        } else {
+                        if(!(ignoreold && price->is_old)) {
+                            if(!searchonly) {
+                                opendata_result_t **val = map_get(&map, price->fuelDesc);
+                                if (!val || (*val)->price->price > price->price) {
+                                    if(val) dmt_free(*val); // Elemento precedente già in mappa
+                                    opendata_result_t *item = dmt_malloc(sizeof(opendata_result_t));
+                                    if(!item) continue;
+                                    item->station = station;
+                                    item->price = price;
+                                    map_set(&map, price->fuelDesc, item);
+                                    log_debug(u8"Aggiunta categoria alla mappa di ricerca: %s", price->fuelDesc);
+                                }
+                            } else {
 #ifdef COLOR
-                            char *alert = make_alert(price->lastUpdate);
+                                char *alert = make_alert(price);
 #endif // COLOR
-                            printf( //
-                                u8"\t%s, %.3f euro %s (dato del %s)\n", //
-                                price->fuelDesc, //
-                                price->price, //
-                                price->self == NOT_SELF ? "non servito" : "servito", //
+                                printf( //
+                                    u8"\t%s, %.3f euro %s (dato del %s)\n", //
+                                    price->fuelDesc, //
+                                    price->price, //
+                                    price->self == NOT_SELF ? "non servito" : "servito", //
 #ifdef COLOR
-                                alert //
+                                    (alert) ? alert : "" //
 #else
-                                price->lastUpdate //
+                                    price->lastUpdate //
 #endif // COLOR
-                            );
+                                );
 #ifdef COLOR
-                            dmt_free(alert);
+                                if(alert) dmt_free(alert);
 #endif // COLOR
+                            }
                         }
                     }
                     price = price->next;
@@ -243,27 +253,29 @@ int main(int argn, char* argv[]) {
 
     while ((key = map_next(&map, &iter))) {
         opendata_result_t **val = map_get(&map, key);
+        if(!(ignoreold && (*val)->price->is_old)) {
 #ifdef COLOR
-        char *alert = make_alert((*val)->price->lastUpdate);
+            char *alert = make_alert((*val)->price);
 #endif // COLOR
-        printf( //
-            u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
-            key, //
-            (*val)->station->town, //
-            (*val)->station->type, //
-            (*val)->station->name, //
-            (*val)->station->address, //
-            (*val)->price->price, //
-            ((*val)->price->self == NOT_SELF) ? "non servito" : "servito", //
+            printf( //
+                u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
+                key, //
+                (*val)->station->town, //
+                (*val)->station->type, //
+                (*val)->station->name, //
+                (*val)->station->address, //
+                (*val)->price->price, //
+                ((*val)->price->self == NOT_SELF) ? "non servito" : "servito", //
 #ifdef COLOR
-            alert //
+                (alert) ? alert : "" //
 #else
-            (*val)->price->lastUpdate //
+                (*val)->price->lastUpdate //
 #endif // COLOR
-        );
+            );
 #ifdef COLOR
-        dmt_free(alert);
+            if(alert) dmt_free(alert);
 #endif // COLOR
+        }
         dmt_free(*val);
     }
 
@@ -312,6 +324,7 @@ static void helpme() {
            "\t-t --type --> Filtro tipologia carburante\n"
            "\t-s --search-only --> Ricerca semplice\n"
            "\t-u --ignore-cache --> Ignora la cache\n"
+           "\t-o --ignore-old --> Ignora i record non aggiornati di recente\n"
            "\t-v --verbose --> Log verboso\n"
            "\t-h --help --> Visualizza questo aiuto\n");
 }
