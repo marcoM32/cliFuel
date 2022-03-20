@@ -233,7 +233,7 @@ bool is_old_data(const char* data) {
 }
 
 char* make_alert(const char *value) {
-    char *pattern = dmt_malloc(sizeof(char) * strlen(value) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN));
+    char *pattern = dmt_malloc(sizeof(char) * strlen(value) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN) + 1); // + \0
     if(!pattern)
         return "";
     sprintf(pattern, is_old_data(value) ? COLOR_START_PATTERN "%s" COLOR_END_PATTERN : "%s", value);
