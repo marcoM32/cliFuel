@@ -52,6 +52,7 @@ static struct option long_options[] = {
     { "type", required_argument, NULL, 't' },
     { "search-only", no_argument, NULL, 's' },
     { "ignore-cache", no_argument, NULL, 'u' },
+    { "ignore-old", no_argument, NULL, 'o' },
     { "verbose", no_argument, NULL, 'v' },
     { "help", no_argument, NULL, 'h' },
     { NULL, no_argument, NULL, 0 }
