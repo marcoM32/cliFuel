@@ -33,7 +33,7 @@
 #endif // FILE_DOWNLOAD
 #include <unistd.h>
 #ifdef ANIMATION
-#ifdef _WIN32
+#if defined _WIN32 || defined _WIN64
 #include <Windows.h>
 #else
 #ifndef _UNISTD_H

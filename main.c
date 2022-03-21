@@ -58,6 +58,19 @@ int main(int argn, char* argv[]) {
                     "PARTICULAR PURPOSE.\n"
                     "\n"
                     "Buildtime: %s - %s\n\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
+#ifdef FILE_DOWNLOAD
+            fprintf(stdout, "\t-With automatic file download feature\n");
+#endif
+#ifdef ANIMATION
+            fprintf(stdout, "\t-With progress animation feature\n");
+#endif
+#ifdef COLOR
+            fprintf(stdout, "\t-With color on old items feature\n");
+#endif
+#ifdef DEBUG
+            fprintf(stdout, "\t-With debug extra output feature\n");
+#endif
+            fprintf(stdout, "\n");
             helpme();
             exit(EXIT_SUCCESS);
             break;
@@ -94,7 +107,7 @@ int main(int argn, char* argv[]) {
 
     struct stat st = {0};
     if (stat(CACHE_DIR, &st) == -1) {
-#ifdef _WIN32
+#if defined _WIN32 || defined _WIN64
         mkdir(CACHE_DIR);
 #else
         mkdir(CACHE_DIR, 0700);
@@ -307,7 +320,7 @@ static void * progress(void *argc) {
     if(animation) {
         while(true) {
             statusbar_inc(animation);
-#ifdef _WIN32
+#if defined _WIN32 || defined _WIN64
             Sleep(100);
 #else
             sleep(0.50);

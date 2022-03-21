@@ -233,7 +233,7 @@ bool is_old_data(const char* data) {
 }
 
 #ifdef COLOR
-char* make_alert(const price_t *price) { // FIXME
+char* make_alert(const price_t *price) {
     if(!price) return NULL;
     char *pattern = dmt_malloc(sizeof(char) * strlen(price->lastUpdate) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN) + 1); // + \0
     if(!pattern) return NULL;
