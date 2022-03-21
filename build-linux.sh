@@ -1,7 +1,6 @@
 #!/bin/bash
 
 clean() {
-	rm -f CsvParser_2016_12_06.zip > /dev/null;
 	rm -Rfv ./log.c/ > /dev/null;
 	rm -Rfv ./map/ > /dev/null;
 	rm -Rfv ./CsvParser/ > /dev/null;
@@ -11,7 +10,7 @@ clean() {
 
 DEBUG="";
 
-while getopts 'cd' OPTION; do
+while getopts 'cdf' OPTION; do
     case "$OPTION" in
         c)
             echo "starting project cleaning...";
@@ -62,9 +61,10 @@ if [ ! -d "./map/" ]; then
   git clone https://github.com/rxi/map.git;
 fi
 
-if [ ! -f "CsvParser_2016_12_06.zip" ]; then
+if [ ! -d "./CsvParser/" ]; then
   wget https://downloads.sourceforge.net/project/cccsvparser/2016-12-06/CsvParser_2016_12_06.zip;
   unzip CsvParser_2016_12_06.zip > /dev/null;
+  rm -f CsvParser_2016_12_06.zip > /dev/null;
 fi
 
 if [ ! -d "./progressbar/" ]; then
@@ -92,6 +92,7 @@ ar -rcs ./progressbar/libprogressbar.a ./progressbar/lib/progressbar.o ./progres
 gcc -Wall $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
 ar -rcs ./dmt/librxidmt.a ./dmt/dmt.o;
 
+COMPILER_DIR="-I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src";
 SYMBOLS="-DFILE_DOWNLOAD -DANIMATION -DCOLOR";
 
 if [ -n "${DEBUG}" ]; then
@@ -99,11 +100,12 @@ if [ -n "${DEBUG}" ]; then
   SYMBOLS+=' -DDEBUG';
 fi
 
+LINKER_DIR="-L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -L./dmt/";
 LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lrxidmt -lpthread";
 
-gcc -Wall $SYMBOLS $DEBUG -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src -c main.c -o main.o;
-gcc -Wall $SYMBOLS $DEBUG -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src -c opendata.c -o opendata.o;
-gcc -L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -L./dmt/ -o $BUILD_DIR/cliFuel main.o opendata.o -O3 $LIBRARIES;
+gcc -Wall $SYMBOLS $DEBUG $COMPILER_DIR -c main.c -o main.o;
+gcc -Wall $SYMBOLS $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
+gcc $LINKER_DIR -o $BUILD_DIR/cliFuel main.o opendata.o -O3 $LIBRARIES;
 
 chmod +x $BUILD_DIR/cliFuel;
 
