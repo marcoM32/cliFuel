@@ -60,16 +60,19 @@ int main(int argn, char* argv[]) {
                     "Buildtime: %s - %s\n\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
 #ifdef FILE_DOWNLOAD
             fprintf(stdout, "\t-With automatic file download feature\n");
-#endif
+#endif // FILE_DOWNLOAD
 #ifdef ANIMATION
             fprintf(stdout, "\t-With progress animation feature\n");
-#endif
+#endif // ANIMATION
 #ifdef COLOR
-            fprintf(stdout, "\t-With color on old items feature\n");
-#endif
+            fprintf(stdout, "\t-With color on price items feature\n");
+#endif // COLOR
 #ifdef DEBUG
             fprintf(stdout, "\t-With debug extra output feature\n");
-#endif
+#endif // DEBUG
+#ifdef NO_CACHE
+            fprintf(stdout, "\t-With no file cache feature\n");
+#endif // NO_CACHE
             fprintf(stdout, "\n");
             helpme();
             exit(EXIT_SUCCESS);
@@ -170,7 +173,7 @@ int main(int argn, char* argv[]) {
 
     station_t* stations = stationFinder(anagrafiaFilename, FILE_SEPARATOR, FILE_HEADER, query);
     if(!stations) {
-        log_error("Impossibile indicizzare le stazioni");
+        log_error("Impossibile indicizzare le stazioni oppure nessun risultato trovato");
         exit(EXIT_FAILURE);
     }
 #ifdef DEBUG
@@ -185,7 +188,7 @@ int main(int argn, char* argv[]) {
 
     price_t* prices = priceFinder(priceFilename, FILE_SEPARATOR, FILE_HEADER, stations, type);
     if(!prices) {
-        log_error("Impossibile indicizzare i prezzi");
+        log_error("Impossibile indicizzare i prezzi oppure nessun risultato trovato");
         exit(EXIT_FAILURE);
     }
 #ifdef DEBUG
@@ -221,7 +224,7 @@ int main(int argn, char* argv[]) {
                 price_t *price = prices;
                 while (price) {
                     if(price->id == station->id) {
-                        if(!(ignoreold && price->is_old)) {
+                        if(!(ignoreold && price->is_old == OLD)) {
                             if(!searchonly) {
                                 opendata_result_t **val = map_get(&map, price->fuelDesc);
                                 if (!val || (*val)->price->price > price->price) {
@@ -266,7 +269,7 @@ int main(int argn, char* argv[]) {
 
     while ((key = map_next(&map, &iter))) {
         opendata_result_t **val = map_get(&map, key);
-        if(!(ignoreold && (*val)->price->is_old)) {
+        if(!(ignoreold && (*val)->price->is_old == OLD)) {
 #ifdef COLOR
             char *alert = make_alert((*val)->price);
 #endif // COLOR
@@ -291,6 +294,17 @@ int main(int argn, char* argv[]) {
         }
         dmt_free(*val);
     }
+
+#ifdef COLOR
+    fprintf(stdout, "\n\n");
+    fprintf(stdout, "Legenda dei colori:\n");
+    fprintf(stdout, "\t-%s\n", COLOR_START_PATTERN(32) u8"Dato di oggi" COLOR_END_PATTERN);
+    fprintf(stdout, "\t-%s\n", COLOR_START_PATTERN(93) u8"Dato di uno, massimo due giorni" COLOR_END_PATTERN);
+    if(!ignoreold) {
+        fprintf(stdout, "\t-%s\n", COLOR_START_PATTERN(31) u8"Dato con più di tre giorni" COLOR_END_PATTERN);
+    }
+    fprintf(stdout, "\n\n");
+#endif // COLOR
 
 #ifdef NO_CACHE
     if (remove(anagrafiaFilename) != 0)
@@ -333,7 +347,7 @@ static void * progress(void *argc) {
 
 static void helpme() {
     printf("Parametri:\n\n"
-           "\t-q --query --> Comune di ricerca\n"
+           "\t-q --query --> Comune di ricerca oppure id impianto usando es: \"-q id:34974\" \n"
            "\t-t --type --> Filtro tipologia carburante\n"
            "\t-s --search-only --> Ricerca semplice\n"
            "\t-u --ignore-cache --> Ignora la cache\n"
