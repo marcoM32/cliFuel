@@ -18,6 +18,11 @@
 
 #include "opendata.h"
 
+static bool strStartsWith(const char *a, const char *b) {
+    if(strncmp(a, b, strlen(b)) == 0) return 1;
+    return 0;
+}
+
 static char* strCopy(const char* str) {
     if(!str)
         return NULL;
@@ -92,9 +97,14 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
         while ((row = CsvParser_getRow(csvparser))) {
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 10) {
-                if(strcasecmp(rowFields[6], query) == 0) {
+                int id = -1;
+                if(strStartsWith(query, QUERY_PREFIX_ID)) {
+                    id = atoi(query + +strlen(QUERY_PREFIX_ID));
+                }
+                int stationId = atoi(rowFields[0]);
+                if((id == stationId) || strcasecmp(rowFields[6], query) == 0) {
                     station_t *current = (station_t *) dmt_malloc(sizeof(station_t));
-                    current->id = atoi(rowFields[0]);
+                    current->id = stationId;
                     current->name = strCopy(rowFields[1]);
                     current->type = strCopy(rowFields[2]);
                     current->address = strCopy(rowFields[5]);
@@ -211,7 +221,7 @@ void freePriceList(price_t* list) {
     list = NULL;
 }
 
-bool is_old_data(const char* data) {
+enum item_age is_old_data(const char* data) {
 
     if(!data)
         return false;
@@ -229,15 +239,34 @@ bool is_old_data(const char* data) {
         return false;
     }
 
-    return difftime(mktime(localtime(&now)), mktime(&param)) > 259200; // 3 deys
+    size_t diff = difftime(mktime(localtime(&now)), mktime(&param));
+    if(diff <= 86400) {
+        return NEW; // 1 day
+    } else if(diff >= 172800 && diff <= 259200) {
+        return OK;  // 2-3 day
+    } else {
+        return OLD; // > 3 day
+    }
 }
 
 #ifdef COLOR
 char* make_alert(const price_t *price) {
     if(!price) return NULL;
-    char *pattern = dmt_malloc(sizeof(char) * strlen(price->lastUpdate) + strlen(COLOR_START_PATTERN) +  strlen(COLOR_END_PATTERN) + 1); // + \0
+    char *pattern = dmt_malloc(sizeof(char) * strlen(price->lastUpdate) + strlen(COLOR_START_PATTERN(100)) /* !!! Pericoloso !!! */ +  strlen(COLOR_END_PATTERN) + 1); // + \0
     if(!pattern) return NULL;
-    sprintf(pattern, price->is_old ? COLOR_START_PATTERN "%s" COLOR_END_PATTERN : "%s", price->lastUpdate);
+    switch(price->is_old) {
+    case NEW:
+        sprintf(pattern, COLOR_START_PATTERN(32) "%s" COLOR_END_PATTERN, price->lastUpdate);
+        break;
+    case OK:
+        sprintf(pattern, COLOR_START_PATTERN(93) "%s" COLOR_END_PATTERN, price->lastUpdate);
+        break;
+    case OLD:
+        sprintf(pattern, COLOR_START_PATTERN(31) "%s" COLOR_END_PATTERN, price->lastUpdate);
+        break;
+    default:
+        pattern = NULL;
+    }
     return pattern;
 }
 #endif // COLOR

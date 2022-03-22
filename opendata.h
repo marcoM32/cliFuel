@@ -51,9 +51,13 @@
 #define FILE_HEADER false
 
 #ifdef COLOR
-#define COLOR_START_PATTERN "\e[1;31m"
+#define COLOR_START_PATTERN(c) "\e[1;" #c "m"
 #define COLOR_END_PATTERN "\e[0m"
 #endif // COLOR
+
+#define QUERY_PREFIX_ID "id:"
+
+enum item_age {NEW = 0, OK, OLD};
 
 enum service {SELF = 0, NOT_SELF};
 
@@ -72,7 +76,7 @@ typedef struct price {
     float price;
     enum service self;
     char* lastUpdate;
-    bool is_old;
+    enum item_age is_old;
     struct price* next;
 } price_t;
 
@@ -91,7 +95,7 @@ void freeStationList(station_t*);
 
 void freePriceList(price_t*);
 
-bool is_old_data(const char*);
+enum item_age is_old_data(const char*);
 
 #ifdef COLOR
 char* make_alert(const price_t*);
