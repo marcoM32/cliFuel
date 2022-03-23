@@ -119,6 +119,7 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
                         }
                         stmp->next = current;
                     }
+                    if(id == stationId) break;
                 }
             }
             CsvParser_destroy_row(row);

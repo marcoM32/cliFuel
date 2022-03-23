@@ -45,7 +45,8 @@
 #endif // ANIMATION
 #include "opendata.h"
 
-#define PROGRAM_VERSION "v0.02"
+#define CODE_NAME "Fog"
+#define PROGRAM_VERSION "v0.02" " (" CODE_NAME ")"
 
 static struct option long_options[] = {
     { "query", required_argument, NULL, 'q' },

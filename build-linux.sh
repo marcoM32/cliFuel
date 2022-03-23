@@ -10,7 +10,7 @@ clean() {
 
 DEBUG="";
 
-while getopts 'cdf' OPTION; do
+while getopts 'cd' OPTION; do
     case "$OPTION" in
         c)
             echo "starting project cleaning...";
@@ -24,26 +24,26 @@ while getopts 'cdf' OPTION; do
     esac
 done
 
-echo "starting Linux build for cliFuel...";
+echo "Starting Linux build for cliFuel...";
 
 dpkg -s "libcurl4-openssl-dev" >/dev/null 2>&1 && {
-        echo "libcurl is installed";
+        echo "Libcurl is installed";
 } || {
-        echo "missing libcurl --> run sudo apt-get install libcurl4-openssl-dev";
+        echo "Missing libcurl --> run sudo apt-get install libcurl4-openssl-dev";
         exit -1;
 }
 
 dpkg -s "libncurses5-dev" >/dev/null 2>&1 && {
-        echo "libncurses is installed";
+        echo "Libncurses is installed";
 } || {
-        echo "missing libncurses --> run sudo apt-get install libncurses5-dev";
+        echo "Missing libncurses --> run sudo apt-get install libncurses5-dev";
         exit -1;
 }
 
 dpkg -s "astyle" >/dev/null 2>&1 && {
         eval "astyle --style=java --style=attach -A2 --suffix=none ./*.c,*.h";
 } || {
-        echo "formatting source is not possible";
+        echo "Formatting source is not possible";
 }
 
 BUILD_DIR="./bin/linux";
@@ -95,19 +95,28 @@ ar -rcs ./dmt/librxidmt.a ./dmt/dmt.o;
 COMPILER_DIR="-I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src";
 SYMBOLS="-DFILE_DOWNLOAD -DANIMATION -DCOLOR";
 
-if [ -n "${DEBUG}" ]; then
-  echo "Active debug build...";
-  SYMBOLS+=' -DDEBUG';
-fi
-
 LINKER_DIR="-L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -L./dmt/";
 LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lrxidmt -lpthread";
 
-gcc -Wall $SYMBOLS $DEBUG $COMPILER_DIR -c main.c -o main.o;
-gcc -Wall $SYMBOLS $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
-gcc $LINKER_DIR -o $BUILD_DIR/cliFuel main.o opendata.o -O3 $LIBRARIES;
+BUILDS=( "cliFuel-basic:-DFILE_DOWNLOAD" 
+			"cliFuel-middle:-DFILE_DOWNLOAD -DANIMATION" 
+				"cliFuel:-DFILE_DOWNLOAD -DANIMATION -DCOLOR" ) 
 
-chmod +x $BUILD_DIR/cliFuel;
+for build in "${BUILDS[@]}" ; do 
+	KEY="${build%%:*}"; 
+	VALUE="${build##*:}";
+	
+	if [ -n "${DEBUG}" ]; then
+	  echo "Active debug build...";
+	  VALUE+=' -DDEBUG';
+	fi
+	
+	echo "Start build for ${KEY} with ${VALUE}";
+	
+	gcc -Wall $VALUE $DEBUG $COMPILER_DIR -c main.c -o main.o;
+	gcc -Wall $VALUE $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
+	gcc $LINKER_DIR -o $BUILD_DIR/$KEY main.o opendata.o -O3 $LIBRARIES;
+done
 
 cp cliFuel-demon.sh $BUILD_DIR;
 chmod +x $BUILD_DIR/cliFuel-demon.sh;
@@ -115,4 +124,16 @@ chmod +x $BUILD_DIR/cliFuel-demon.sh;
 cp LICENSE $BUILD_DIR;
 cp README.md $BUILD_DIR;
 
-$BUILD_DIR/cliFuel -h;
+for build in "${BUILDS[@]}" ; do
+	KEY="${build%%:*}"; 
+	VALUE="${build##*:}"; 
+	if [ -f "${BUILD_DIR}/${KEY}" ]; then
+		chmod +x $BUILD_DIR/"${build%%:*}";
+		"${BUILD_DIR}/${KEY}" -h;
+	else
+		echo "${build%%:*}";
+		echo "Build error... ${BUILD_DIR}/${KEY} not exist";
+	fi
+done
+
+

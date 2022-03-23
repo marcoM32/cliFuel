@@ -19,9 +19,7 @@
 #ifndef OPENDATA_H_INCLUDED
 #define OPENDATA_H_INCLUDED
 
-#ifdef COLOR
 #define _GNU_SOURCE 1
-#endif // COLOR
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,10 +30,7 @@
 #include <dmt.h>
 #include <curl/curl.h>
 #include <csvparser.h>
-
-#ifdef COLOR
 #include <time.h>
-#endif // COLOR
 
 #define CACHE_DIR "cache"
 
