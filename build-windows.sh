@@ -1,78 +1,169 @@
 #!bash
-echo "starting Windows build for cliFuel...";
+
+clean() {
+    rm -Rfv ./curl/ > /dev/null;
+    rm -Rfv ./OpenSSL/ > /dev/null;
+    rm -Rfv ./log.c/ > /dev/null;
+    rm -Rfv ./map/ > /dev/null;
+    rm -Rfv ./CsvParser/ > /dev/null;
+    rm -Rfv ./progressbar/ > /dev/null;
+    rm -Rfv ./termcap-lib/ > /dev/null;
+    rm -Rfv ./termcap-bin/ > /dev/null;
+    rm -Rfv ./dmt/ > /dev/null;
+    rm -f *.res rcedit-x86.exe *.dll > /dev/null;
+}
+
+ARCH="-m32";
+DEBUG="";
+
+while getopts 'cd' OPTION; do
+    case "$OPTION" in
+        c)
+            echo "Starting project cleaning...";
+            clean;
+            echo "Finish";
+            exit 0;
+            ;;
+        d)
+            DEBUG="-g";
+            ;;
+    esac
+done
+
+echo "Starting Windows build for cliFuel...";
 
 BUILD_DIR="./bin/windows";
 echo "Build dir: $BUILD_DIR";
 
+rm -f *.o > /dev/null;
 rm -Rf $BUILD_DIR;
 mkdir -p $BUILD_DIR;
 
-wget https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x86.exe;
-wget https://curl.haxx.se/windows/dl-7.73.0_1/curl-7.73.0_1-win32-mingw.zip;
-wget https://downloads.sourceforge.net/project/openssl-for-windows/OpenSSL-1.1.1h_win32.zip;
-git clone https://github.com/rxi/log.c.git;
-git clone https://github.com/rxi/map.git;
-wget https://downloads.sourceforge.net/project/cccsvparser/2016-12-06/CsvParser_2016_12_06.zip;
-wget https://downloads.sourceforge.net/project/gnuwin32/termcap/1.3.1/termcap-1.3.1-lib.zip;
-wget https://downloads.sourceforge.net/project/gnuwin32/termcap/1.3.1/termcap-1.3.1-bin.zip;
-git clone https://github.com/doches/progressbar.git;
+if [ ! -f "rcedit-x86.exe" ]; then
+    wget https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x86.exe;
+fi
 
-unzip curl-7.73.0_1-win32-mingw.zip > /dev/null;
-rm -f curl-7.73.0_1-win32-mingw.zip > /dev/null;
+if [ ! -d "./curl" ]; then
+    wget https://curl.se/windows/dl-7.82.0_1/curl-7.82.0_1-win32-mingw.zip;
+    unzip -d curl curl-7.73.0_1-win32-mingw.zip > /dev/null;
+    rm -f curl-7.73.0_1-win32-mingw.zip > /dev/null;
+fi
 
-unzip OpenSSL-1.1.1h_win32.zip > /dev/null;
-rm -f OpenSSL-1.1.1h_win32.zip > /dev/null;
+if [ ! -d "./OpenSSL" ]; then
+    wget https://downloads.sourceforge.net/project/openssl-for-windows/OpenSSL-1.1.1h_win32.zip;
+    unzip -d OpenSSL OpenSSL-1.1.1h_win32.zip > /dev/null;
+    rm -f OpenSSL-1.1.1h_win32.zip > /dev/null;
+fi
 
-unzip CsvParser_2016_12_06.zip > /dev/null;
-rm -f CsvParser_2016_12_06.zip > /dev/null;
+if [ ! -d "./log.c/" ]; then
+    git clone https://github.com/rxi/log.c.git;
+fi
 
-unzip -d termcap-1.3.1-lib termcap-1.3.1-lib.zip > /dev/null;
-rm -f termcap-1.3.1-lib.zip > /dev/null;
+if [ ! -d "./map/" ]; then
+    git clone https://github.com/rxi/map.git;
+fi
 
-unzip -d termcap-1.3.1-bin termcap-1.3.1-bin.zip > /dev/null;
-rm -f termcap-1.3.1-bin.zip > /dev/null;
+if [ ! -d "./CsvParser/" ]; then
+    wget https://downloads.sourceforge.net/project/cccsvparser/2016-12-06/CsvParser_2016_12_06.zip;
+    unzip CsvParser_2016_12_06.zip > /dev/null;
+    rm -f CsvParser_2016_12_06.zip > /dev/null;
+fi
 
-mingw32-gcc.exe -Wall -g -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
-mingw32-gcc.exe -Wall -g -I./map/src/ -O2 -shared ./map/src/map.c -o ./map/rximap.dll;
+if [ ! -d "./termcap-lib/" ]; then
+    wget https://downloads.sourceforge.net/project/gnuwin32/termcap/1.3.1/termcap-1.3.1-lib.zip;
+    unzip -d termcap-lib termcap-1.3.1-lib.zip > /dev/null;
+    rm -f termcap-1.3.1-lib.zip > /dev/null;
+fi
 
-mingw32-gcc.exe -Wall -g -DLOG_USE_COLOR -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
-mingw32-gcc.exe -Wall -g -I./log.c/src/ -O2 -shared ./log.c/src/log.c -o ./log.c/rxilog.dll
+if [ ! -d "./termcap-bin/" ]; then
+    wget https://downloads.sourceforge.net/project/gnuwin32/termcap/1.3.1/termcap-1.3.1-bin.zip;
+    unzip -d termcap-bin termcap-1.3.1-bin.zip > /dev/null;
+    rm -f termcap-1.3.1-bin.zip > /dev/null;
+fi
 
-mingw32-gcc.exe -Wall -g -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
-mingw32-gcc.exe -Wall -g -I./CsvParser/include/ -O2 -shared ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.dll;
+if [ ! -d "./progressbar/" ]; then
+    git clone https://github.com/doches/progressbar.git;
+fi
 
-mingw32-gcc.exe -Wall -g -I./termcap-1.3.1-lib/include/ -I./progressbar/include/progressbar/ -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
-mingw32-gcc.exe -Wall -g -I./termcap-1.3.1-lib/include/ -I./progressbar/include/progressbar/ -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
-mingw32-gcc.exe -Wall -g -I./termcap-1.3.1-lib/include/ -I./progressbar/include/progressbar/ -L./termcap-1.3.1-lib/lib/ -O2 -shared ./progressbar/lib/*.c -o ./progressbar/progressbar.dll -ltermcap;
+if [ ! -d "./dmt/" ]; then
+    git clone https://github.com/rxi/dmt.git;
+fi
 
-mingw32-gcc.exe -Wall -DFILE_DOWNLOAD -DANIMATION -g -I./curl-7.73.0-win32-mingw/include -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -c main.c -o main.o;
-mingw32-gcc.exe -Wall -DFILE_DOWNLOAD -DANIMATION -g -I./curl-7.73.0-win32-mingw/include -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -c opendata.c -o opendata.o;
-mingw32-gcc.exe -L./curl-7.73.0-win32-mingw/bin/ -L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -o $BUILD_DIR/cliFuel.exe main.o opendata.o -O3 -lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lpthread;
 
-./rcedit-x86.exe "./bin/windows/cliFuel.exe" --set-icon "icon.ico";
+if [ ! -f "./map/rximap.dll" ]; then
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./map/src/ -O3 -shared ./map/src/map.c -o ./map/rximap.dll;
+fi
 
-cp ./curl-7.73.0-win32-mingw/bin/libcurl.dll $BUILD_DIR;
-cp ./OpenSSL-1.1.1h_win32/libcrypto-1_1.dll $BUILD_DIR;
-cp ./OpenSSL-1.1.1h_win32/libssl-1_1.dll $BUILD_DIR;
+if [ ! -f "./log.c/rxilog.dll" ]; then
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -DLOG_USE_COLOR -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./log.c/src/ -O3 -shared ./log.c/src/log.c -o ./log.c/rxilog.dll;
+fi
+
+if [ ! -f "./CsvParser/csvparser.dll" ]; then
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./CsvParser/include/ -O3 -shared ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.dll;
+fi
+
+if [ ! -f "./dmt/rxidmt.dll" ]; then
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./dmt/src/ -O3 -shared ./dmt/src/dmt.c -o ./dmt/rxidmt.dll;
+fi
+
+if [ ! -f "./progressbar/progressbar.dll" ]; then
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./termcap-lib/include/ -I./progressbar/include/progressbar/ -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./termcap-lib/include/ -I./progressbar/include/progressbar/ -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./termcap-lib/include/ -I./progressbar/include/progressbar/ -L./termcap-lib/lib/ -O3 -shared ./progressbar/lib/*.c -o ./progressbar/progressbar.dll -ltermcap;
+fi
+
+COMPILER_DIR="-I./curl/include -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src";
+LINKER_DIR="-L./curl/lib/ -L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -L./dmt/";
+LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lrxidmt -lpthread";
+
+BUILDS=( "cliFuel-basic.exe:-DFILE_DOWNLOAD" "cliFuel.exe:-DFILE_DOWNLOAD -DANIMATION");
+
+for build in "${BUILDS[@]}" ; do
+    KEY="${build%%:*}";
+    VALUE="${build##*:}";
+
+    if [ -n "${DEBUG}" ]; then
+        echo "Active debug build...";
+        VALUE+=' -DDEBUG';
+    fi
+
+    echo "Start build for ${KEY} with ${VALUE}";
+
+    x86_64-w64-mingw32-gcc.exe $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c main.c -o main.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
+    x86_64-w64-mingw32-gcc.exe $ARCH $LINKER_DIR -o "$BUILD_DIR/$KEY" main.o opendata.o -O3 $LIBRARIES;
+
+    ./rcedit-x86.exe "$BUILD_DIR/$KEY" --set-icon "icon.ico";
+done
+
+cp ./curl/bin/libcurl.dll $BUILD_DIR;
+cp ./OpenSSL/libcrypto-1_1.dll $BUILD_DIR;
+cp ./OpenSSL/libssl-1_1.dll $BUILD_DIR;
 cp ./map/rximap.dll $BUILD_DIR;
 cp ./log.c/rxilog.dll $BUILD_DIR;
 cp ./CsvParser/csvparser.dll $BUILD_DIR;
 cp ./progressbar/progressbar.dll $BUILD_DIR;
-cp ./termcap-1.3.1-bin/bin/termcap.dll $BUILD_DIR;
-
-rm -Rfv ./curl-7.73.0-win32-mingw/ > /dev/null;
-rm -Rfv ./OpenSSL-1.1.1h_win32/ > /dev/null;
-rm -Rfv ./log.c/ > /dev/null;
-rm -Rfv ./map/ > /dev/null;
-rm -Rfv ./CsvParser/ > /dev/null;
-rm -Rfv ./progressbar/ > /dev/null;
-rm -Rfv ./termcap-1.3.1-lib/ > /dev/null;
-rm -Rfv ./termcap-1.3.1-bin/ > /dev/null;
-rm -f *.o *.res rcedit-x86.exe *.dll > /dev/null;
+cp ./termcap-bin/bin/termcap.dll $BUILD_DIR;
+cp ./dmt/rxidmt.dll $BUILD_DIR;
 
 cp cliFuel-demon.sh $BUILD_DIR;
+chmod +x $BUILD_DIR/cliFuel-demon.sh;
 
 cp LICENSE $BUILD_DIR;
 cp README.md $BUILD_DIR;
 
-$BUILD_DIR/cliFuel -h;
+for build in "${BUILDS[@]}" ; do
+    KEY="${build%%:*}";
+    VALUE="${build##*:}";
+    if [ -f "${BUILD_DIR}/${KEY}" ]; then
+        chmod +x $BUILD_DIR/"${build%%:*}";
+        "${BUILD_DIR}/${KEY}" -h;
+    else
+        echo "${build%%:*}";
+        echo "Build error... "${BUILD_DIR}/${KEY}" not exist";
+    fi
+done

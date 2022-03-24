@@ -32,12 +32,10 @@
 #include <csvparser.h>
 #include <time.h>
 
-#define CACHE_DIR "cache"
+#define CACHE_DIR ".cache"
 
 #define ANAGRAFIA_IMPIANTI_FILE "anagrafica_impianti_%y_%m_%d.csv"
 #define PREZZI_FILE "prezzi_%y_%m_%d.csv"
-
-#define FILENAME(dir, filename) dir "/" filename
 
 #define ANAGRAFIA_IMPIANTI_URL "https://www.mise.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv"
 #define PREZZI_URL "https://www.mise.gov.it/images/exportCSV/prezzo_alle_8.csv"
@@ -52,7 +50,7 @@
 
 #define QUERY_PREFIX_ID "id:"
 
-enum item_age {NEW = 0, OK, OLD};
+enum item_age {UNDEF = 0, NEW, OK, OLD };
 
 enum service {SELF = 0, NOT_SELF};
 

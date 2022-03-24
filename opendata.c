@@ -225,19 +225,26 @@ void freePriceList(price_t* list) {
 enum item_age is_old_data(const char* data) {
 
     if(!data)
-        return false;
+        return UNDEF;
 
     struct tm param = {0};
+#ifdef _WIN32
+    sscanf(data, "%d/%d/%d  %d:%d:%d", &param.tm_mday, &param.tm_mon, &param.tm_year, &param.tm_hour, &param.tm_min, &param.tm_sec);
+    param.tm_mon=param.tm_mon-1;
+    param.tm_year=param.tm_year+1900;
+    param.tm_isdst=-1;
+#else
     char *s = strptime(data, "%d/%m/%Y %H:%M:%S", &param);
     if (s == NULL) {
         log_error("strptime() failed: %s", data);
-        return false;
+        return UNDEF;
     }
+#endif
 
     time_t now = time(NULL);
     if (now == -1) {
         log_error("time(NULL) failed");
-        return false;
+        return UNDEF;
     }
 
     size_t diff = difftime(mktime(localtime(&now)), mktime(&param));
@@ -266,7 +273,7 @@ char* make_alert(const price_t *price) {
         sprintf(pattern, COLOR_START_PATTERN(31) "%s" COLOR_END_PATTERN, price->lastUpdate);
         break;
     default:
-        pattern = NULL;
+        sprintf(pattern,"%s", price->lastUpdate);
     }
     return pattern;
 }

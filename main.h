@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <strings.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <getopt.h>
@@ -33,16 +32,14 @@
 #endif // FILE_DOWNLOAD
 #include <unistd.h>
 #ifdef ANIMATION
-#if defined _WIN32 || defined _WIN64
+#ifdef _WIN32
+#include <winsock2.h>
 #include <Windows.h>
-#else
-#ifndef _UNISTD_H
-#include <unistd.h>
-#endif // _UNISTD_H
 #endif
 #include <statusbar.h>
 #include <pthread.h>
 #endif // ANIMATION
+#include <libgen.h>
 #include "opendata.h"
 
 #define CODE_NAME "Fog"
@@ -64,6 +61,8 @@ typedef map_t(opendata_result_t*) opendata_map_t;
 #ifdef ANIMATION
 static void * progress(void *);
 #endif // ANIMATION
+
+static char* get_file_path(const char*, const char*);
 
 static void helpme();
 

@@ -85,7 +85,7 @@ int main(int argn, char* argv[]) {
     }
 
     if(!query) {
-        printf("Nessuna query specificata, impossibile proseguire");
+        printf("Nessuna query specificata, impossibile proseguire\n");
         exit(EXIT_SUCCESS);
     }
 
@@ -108,14 +108,18 @@ int main(int argn, char* argv[]) {
         log_debug("Modalita' ignore old attiva");
     }
 
+    char *cacheDir = get_file_path(argv[0], NULL);
+
     struct stat st = {0};
-    if (stat(CACHE_DIR, &st) == -1) {
-#if defined _WIN32 || defined _WIN64
-        mkdir(CACHE_DIR);
+    if (stat(cacheDir, &st) == -1) {
+#ifdef _WIN32
+        mkdir(cacheDir);
 #else
-        mkdir(CACHE_DIR, 0700);
+        mkdir(cacheDir, 0700);
 #endif
     }
+
+    dmt_free(cacheDir);
 
 #ifdef ANIMATION
     pthread_t thread;
@@ -127,8 +131,8 @@ int main(int argn, char* argv[]) {
     }
 #endif // ANIMATION
 
-    char* anagrafiaFilename = strdup(FILENAME(CACHE_DIR, ANAGRAFIA_IMPIANTI_FILE));
-    char* priceFilename = strdup(FILENAME(CACHE_DIR, PREZZI_FILE));
+    char* anagrafiaFilename = get_file_path(argv[0], ANAGRAFIA_IMPIANTI_FILE);
+    char* priceFilename = get_file_path(argv[0], PREZZI_FILE);
 
     if(!anagrafiaFilename || !priceFilename) exit(EXIT_FAILURE);
 
@@ -138,8 +142,15 @@ int main(int argn, char* argv[]) {
     struct tm *timenow;
     time_t now = time(NULL);
     timenow = gmtime(&now);
-    strftime(anagrafiaFilename, strlen(FILENAME(CACHE_DIR, ANAGRAFIA_IMPIANTI_FILE)) + 1, FILENAME(CACHE_DIR, ANAGRAFIA_IMPIANTI_FILE), timenow);
-    strftime(priceFilename, strlen(FILENAME(CACHE_DIR, PREZZI_FILE)) + 1, FILENAME(CACHE_DIR, PREZZI_FILE), timenow);
+
+    char* patternAnagrafiaFilename = strdup(anagrafiaFilename);
+    char* patternPriceFilename = strdup(priceFilename);
+
+    strftime(anagrafiaFilename, strlen(anagrafiaFilename), patternAnagrafiaFilename, timenow);
+    strftime(priceFilename, strlen(priceFilename), patternPriceFilename, timenow);
+
+    free(patternAnagrafiaFilename);
+    free(patternPriceFilename);
 
 #ifdef FILE_DOWNLOAD
 
@@ -314,6 +325,9 @@ int main(int argn, char* argv[]) {
         log_error("Impossibile eliminare il file %s", priceFilename);
 #endif // NO_CACHE
 
+    dmt_free(anagrafiaFilename);
+    dmt_free(priceFilename);
+
     map_deinit(&map);
 
     freeStationList(stations);
@@ -344,6 +358,27 @@ static void * progress(void *argc) {
     return NULL;
 }
 #endif // ANIMATION
+
+static char* get_file_path(const char* dir, const char* filename) {
+
+    if(!dir) {
+        perror("arument = null");
+        return NULL;
+    }
+
+    char *tmp = strdup(dir);
+
+    char *path = dmt_calloc(PATH_MAX, sizeof(char));
+    if(!path) {
+        perror("path = null");
+        return NULL;
+    }
+    snprintf(path, PATH_MAX, "%s/" CACHE_DIR "/%s", dirname(tmp), filename ? filename : "");
+
+    free(tmp);
+
+    return path;
+}
 
 static void helpme() {
     printf("Parametri:\n\n"
