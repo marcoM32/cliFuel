@@ -48,6 +48,7 @@
 static struct option long_options[] = {
     { "query", required_argument, NULL, 'q' },
     { "type", required_argument, NULL, 't' },
+    { "path", required_argument, NULL, 'p' },
     { "search-only", no_argument, NULL, 's' },
     { "ignore-cache", no_argument, NULL, 'u' },
     { "ignore-old", no_argument, NULL, 'o' },
@@ -63,6 +64,8 @@ static void * progress(void *);
 #endif // ANIMATION
 
 static char* get_file_path(const char*, const char*);
+
+static int is_directory(const char *path);
 
 static void helpme();
 

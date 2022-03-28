@@ -15,6 +15,8 @@ clean() {
 
 ARCH="-m32";
 DEBUG="";
+CC="x86_64-w64-mingw32-gcc.exe";
+AR="x86_64-w64-mingw32-gcc-ar.exe";
 
 while getopts 'cd' OPTION; do
     case "$OPTION" in
@@ -89,34 +91,33 @@ if [ ! -d "./dmt/" ]; then
     git clone https://github.com/rxi/dmt.git;
 fi
 
-
-if [ ! -f "./map/rximap.dll" ]; then
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./map/src/ -O3 -shared ./map/src/map.c -o ./map/rximap.dll;
+if [ ! -f "./map/librximap.a" ]; then
+    $CC $ARCH $DEBUG -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
+    $AR -rcs ./map/librximap.a ./map/map.o;
 fi
 
-if [ ! -f "./log.c/rxilog.dll" ]; then
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -DLOG_USE_COLOR -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./log.c/src/ -O3 -shared ./log.c/src/log.c -o ./log.c/rxilog.dll;
+if [ ! -f "./log.c/librxilog.a" ]; then
+    $CC $ARCH $DEBUG -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
+    $AR -rcs ./log.c/librxilog.a ./log.c/log.o;
 fi
 
-if [ ! -f "./CsvParser/csvparser.dll" ]; then
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./CsvParser/include/ -O3 -shared ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.dll;
+if [ ! -f "./CsvParser/libcsvparser.a" ]; then
+    $CC $ARCH $DEBUG -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
+    $AR -rcs ./CsvParser/libcsvparser.a ./CsvParser/csvparser.o;
 fi
 
-if [ ! -f "./dmt/rxidmt.dll" ]; then
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./dmt/src/ -O3 -shared ./dmt/src/dmt.c -o ./dmt/rxidmt.dll;
+if [ ! -f "./dmt/librxidmt.a" ]; then
+    $CC $ARCH $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
+    $AR -rcs ./dmt/librxidmt.a ./dmt/dmt.o;
 fi
 
-if [ ! -f "./progressbar/progressbar.dll" ]; then
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./termcap-lib/include/ -I./progressbar/include/progressbar/ -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./termcap-lib/include/ -I./progressbar/include/progressbar/ -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH $DEBUG -I./termcap-lib/include/ -I./progressbar/include/progressbar/ -L./termcap-lib/lib/ -O3 -shared ./progressbar/lib/*.c -o ./progressbar/progressbar.dll -ltermcap;
+if [ ! -f "./progressbar/libprogressbar.a" ]; then
+    $CC $ARCH $DEBUG -I./progressbar/include/progressbar/ -I./termcap-lib/include -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
+    $CC $ARCH $DEBUG -I./progressbar/include/progressbar/ -I./termcap-lib/include -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
+    $AR -rcs ./progressbar/libprogressbar.a ./progressbar/lib/progressbar.o ./progressbar/lib/statusbar.o;
 fi
 
-COMPILER_DIR="-I./curl/include -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src";
+COMPILER_DIR="-I./curl/include -I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar -I./dmt/src";
 LINKER_DIR="-L./curl/lib/ -L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -L./dmt/";
 LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lrxidmt -lpthread";
 
@@ -133,9 +134,9 @@ for build in "${BUILDS[@]}" ; do
 
     echo "Start build for ${KEY} with ${VALUE}";
 
-    x86_64-w64-mingw32-gcc.exe $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c main.c -o main.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
-    x86_64-w64-mingw32-gcc.exe $ARCH $LINKER_DIR -o "$BUILD_DIR/$KEY" main.o opendata.o -O3 $LIBRARIES;
+    $CC $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c main.c -o main.o;
+    $CC $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
+    $CC $ARCH $LINKER_DIR -o "$BUILD_DIR/$KEY" main.o opendata.o -O3 $LIBRARIES;
 
     ./rcedit-x86.exe "$BUILD_DIR/$KEY" --set-icon "icon.ico";
 done
@@ -143,12 +144,6 @@ done
 cp ./curl/bin/libcurl.dll $BUILD_DIR;
 cp ./OpenSSL/libcrypto-1_1.dll $BUILD_DIR;
 cp ./OpenSSL/libssl-1_1.dll $BUILD_DIR;
-cp ./map/rximap.dll $BUILD_DIR;
-cp ./log.c/rxilog.dll $BUILD_DIR;
-cp ./CsvParser/csvparser.dll $BUILD_DIR;
-cp ./progressbar/progressbar.dll $BUILD_DIR;
-cp ./termcap-bin/bin/termcap.dll $BUILD_DIR;
-cp ./dmt/rxidmt.dll $BUILD_DIR;
 
 cp cliFuel-demon.sh $BUILD_DIR;
 chmod +x $BUILD_DIR/cliFuel-demon.sh;
