@@ -24,18 +24,27 @@ int main(int argn, char* argv[]) {
 
     char* query = NULL;
     char* type = NULL;
+    char* custompath = NULL;
     bool searchonly = false;
     bool ignorecache = false;
     bool ignoreold = false;
 
     char option = '\0';
-    while((option = getopt_long(argn, argv, "q:t:suovh", long_options, NULL)) != -1) {
+    while((option = getopt_long(argn, argv, "q:t:p:suovh", long_options, NULL)) != -1) {
         switch(option) {
         case 'q':
             if (optarg) query = optarg;
             break;
         case 't':
-            if (optarg) type = optarg;
+            if (optarg)
+                type = optarg;
+            break;
+        case 'p':
+            if (optarg) custompath = optarg;
+            if(!custompath || !is_directory(custompath)) {
+                fprintf(stdout, u8"Il percorso indicato con -p (--path) non è una directory valida\n");
+                exit(EXIT_FAILURE);
+            }
             break;
         case 's':
             searchonly = true;
@@ -93,6 +102,23 @@ int main(int argn, char* argv[]) {
         log_debug("Filtro tipologia carburante: %s", type);
     }
 
+    if(custompath) {
+        log_debug("Percorso cache castomizzato: %s", custompath);
+    } else {
+        char *cacheDir = get_file_path(argv[0], NULL);
+
+        struct stat st = {0};
+        if (stat(cacheDir, &st) == -1) {
+#ifdef _WIN32
+            mkdir(cacheDir);
+#else
+            mkdir(cacheDir, 0700);
+#endif
+        }
+
+        dmt_free(cacheDir);
+    }
+
     if(searchonly) {
         log_debug("Modalita' di sola ricerca impianti");
     }
@@ -108,19 +134,6 @@ int main(int argn, char* argv[]) {
         log_debug("Modalita' ignore old attiva");
     }
 
-    char *cacheDir = get_file_path(argv[0], NULL);
-
-    struct stat st = {0};
-    if (stat(cacheDir, &st) == -1) {
-#ifdef _WIN32
-        mkdir(cacheDir);
-#else
-        mkdir(cacheDir, 0700);
-#endif
-    }
-
-    dmt_free(cacheDir);
-
 #ifdef ANIMATION
     pthread_t thread;
     statusbar *animation = statusbar_new("Elaborazione in corso...");
@@ -131,13 +144,15 @@ int main(int argn, char* argv[]) {
     }
 #endif // ANIMATION
 
-    char* anagrafiaFilename = get_file_path(argv[0], ANAGRAFIA_IMPIANTI_FILE);
-    char* priceFilename = get_file_path(argv[0], PREZZI_FILE);
+    log_debug("Indirizzo binario: %s", argv[0]);
+
+    char* anagrafiaFilename = get_file_path(custompath ? custompath : argv[0], ANAGRAFIA_IMPIANTI_FILE);
+    char* priceFilename = get_file_path(custompath ? custompath : argv[0], PREZZI_FILE);
 
     if(!anagrafiaFilename || !priceFilename) exit(EXIT_FAILURE);
 
-    log_debug("File anagrafia: %s", anagrafiaFilename);
-    log_debug("File prezzi: %s", priceFilename);
+    log_debug("File anagrafia ipotetico: %s", anagrafiaFilename);
+    log_debug("File prezzi ipotetico: %s", priceFilename);
 
     struct tm *timenow;
     time_t now = time(NULL);
@@ -146,8 +161,11 @@ int main(int argn, char* argv[]) {
     char* patternAnagrafiaFilename = strdup(anagrafiaFilename);
     char* patternPriceFilename = strdup(priceFilename);
 
-    strftime(anagrafiaFilename, strlen(anagrafiaFilename), patternAnagrafiaFilename, timenow);
-    strftime(priceFilename, strlen(priceFilename), patternPriceFilename, timenow);
+    strftime(anagrafiaFilename, PATH_MAX, patternAnagrafiaFilename, timenow);
+    strftime(priceFilename, PATH_MAX, patternPriceFilename, timenow);
+
+    log_debug("File anagrafia definitivo: %s", anagrafiaFilename);
+    log_debug("File prezzi definitivo: %s", priceFilename);
 
     free(patternAnagrafiaFilename);
     free(patternPriceFilename);
@@ -367,23 +385,34 @@ static char* get_file_path(const char* dir, const char* filename) {
     }
 
     char *tmp = strdup(dir);
+    if(tmp) {
+        char *path = dmt_calloc(PATH_MAX, sizeof(char));
+        if(!path) {
+            perror("path = null");
+            return NULL;
+        }
+        snprintf(path, PATH_MAX - 1, ((tmp[strlen(tmp) - 1] == '/') ? "%s" CACHE_DIR "/%s" : "%s/" CACHE_DIR "/%s"),
+                 is_directory(tmp) ? tmp : dirname(tmp), filename ? filename : "");
 
-    char *path = dmt_calloc(PATH_MAX, sizeof(char));
-    if(!path) {
-        perror("path = null");
-        return NULL;
+        free(tmp);
+        return path;
     }
-    snprintf(path, PATH_MAX, "%s/" CACHE_DIR "/%s", dirname(tmp), filename ? filename : "");
+    perror("tmp = null");
+    return NULL;
+}
 
-    free(tmp);
-
-    return path;
+static int is_directory(const char *path) {
+    struct stat statbuf;
+    if (stat(path, &statbuf) != 0)
+        return 0;
+    return S_ISDIR(statbuf.st_mode);
 }
 
 static void helpme() {
     printf("Parametri:\n\n"
            "\t-q --query --> Comune di ricerca oppure id impianto usando es: \"-q id:34974\" \n"
            "\t-t --type --> Filtro tipologia carburante\n"
+           "\t-p --path --> Percorso cache applicativa\n"
            "\t-s --search-only --> Ricerca semplice\n"
            "\t-u --ignore-cache --> Ignora la cache\n"
            "\t-o --ignore-old --> Ignora i record non aggiornati di recente\n"

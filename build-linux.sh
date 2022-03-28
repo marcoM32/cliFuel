@@ -10,6 +10,8 @@ clean() {
 
 ARCH="-m64";
 DEBUG="";
+CC="gcc";
+AR="ar";
 
 while getopts 'cd' OPTION; do
     case "$OPTION" in
@@ -77,32 +79,32 @@ if [ ! -d "./dmt/" ]; then
 fi
 
 if [ ! -f "./map/librximap.a" ]; then
-    gcc $ARCH $DEBUG -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
-    ar -rcs ./map/librximap.a ./map/map.o;
+    $CC $ARCH $DEBUG -I./map/src/ -c ./map/src/map.c -o ./map/map.o;
+    $AR -rcs ./map/librximap.a ./map/map.o;
 fi
 
 if [ ! -f "./log.c/librxilog.a" ]; then
-    gcc $ARCH $DEBUG -DLOG_USE_COLOR -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
-    ar -rcs ./log.c/librxilog.a ./log.c/log.o;
+    $CC $ARCH $DEBUG -DLOG_USE_COLOR -I./log.c/src/ -c ./log.c/src/log.c -o ./log.c/log.o;
+    $AR -rcs ./log.c/librxilog.a ./log.c/log.o;
 fi
 
 if [ ! -f "./CsvParser/libcsvparser.a" ]; then
-    gcc $ARCH $DEBUG -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
-    ar -rcs ./CsvParser/libcsvparser.a ./CsvParser/csvparser.o;
+    $CC $ARCH $DEBUG -I./CsvParser/include/ -c ./CsvParser/src/csvparser.c -o ./CsvParser/csvparser.o;
+    $AR -rcs ./CsvParser/libcsvparser.a ./CsvParser/csvparser.o;
 fi
 
 if [ ! -f "./dmt/librxidmt.a" ]; then
-    gcc $ARCH $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
-    ar -rcs ./dmt/librxidmt.a ./dmt/dmt.o;
+    $CC $ARCH $DEBUG -I./dmt/src/ -c ./dmt/src/dmt.c -o ./dmt/dmt.o;
+    $AR -rcs ./dmt/librxidmt.a ./dmt/dmt.o;
 fi
 
 if [ ! -f "./progressbar/libprogressbar.a" ]; then
-    gcc $ARCH $DEBUG -I./progressbar/include/progressbar/ -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
-    gcc $ARCH $DEBUG -I./progressbar/include/progressbar/ -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
-    ar -rcs ./progressbar/libprogressbar.a ./progressbar/lib/progressbar.o ./progressbar/lib/statusbar.o;
+    $CC $ARCH $DEBUG -I./progressbar/include/progressbar/ -c ./progressbar/lib/progressbar.c -o ./progressbar/lib/progressbar.o;
+    $CC $ARCH $DEBUG -I./progressbar/include/progressbar/ -c ./progressbar/lib/statusbar.c -o ./progressbar/lib/statusbar.o;
+    $AR -rcs ./progressbar/libprogressbar.a ./progressbar/lib/progressbar.o ./progressbar/lib/statusbar.o;
 fi
 
-COMPILER_DIR="-I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar/ -I./dmt/src";
+COMPILER_DIR="-I./log.c/src -I./CsvParser/include -I./map/src -I./progressbar/include/progressbar -I./dmt/src";
 LINKER_DIR="-L./log.c/ -L./CsvParser/ -L./map/ -L./progressbar/ -L./dmt/";
 LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lprogressbar -lrxidmt -lpthread";
 
@@ -119,9 +121,9 @@ for build in "${BUILDS[@]}" ; do
 
     echo "Start build for ${KEY} with ${VALUE}";
 
-    gcc $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c main.c -o main.o;
-    gcc $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
-    gcc $LINKER_DIR -o $BUILD_DIR/$KEY main.o opendata.o -O3 $LIBRARIES;
+    $CC $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c main.c -o main.o;
+    $CC $ARCH -Wall $VALUE $DEBUG $COMPILER_DIR -c opendata.c -o opendata.o;
+    $CC $ARCH $LINKER_DIR -o "$BUILD_DIR/$KEY" main.o opendata.o -O3 $LIBRARIES;
 done
 
 cp cliFuel-demon.sh $BUILD_DIR;
