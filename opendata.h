@@ -32,7 +32,7 @@
 #include <csvparser.h>
 #include <time.h>
 
-#define CACHE_DIR ".cache"
+#define CACHE_DIR ".clifuel-cache"
 
 #define ANAGRAFIA_IMPIANTI_FILE "anagrafica_impianti_%y_%m_%d.csv"
 #define PREZZI_FILE "prezzi_%y_%m_%d.csv"

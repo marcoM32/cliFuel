@@ -20,6 +20,8 @@
 
 int main(int argn, char* argv[]) {
 
+    if(argn <= 1) helpme(), exit(EXIT_SUCCESS);
+
     log_set_level(LOG_ERROR);
 
     char* query = NULL;
@@ -59,30 +61,6 @@ int main(int argn, char* argv[]) {
             log_set_level(LOG_DEBUG);
             break;
         case 'h':
-            fprintf(stdout, "%s %s\n"
-                    "\n"
-                    "Copyright (C) 2020-2022 Marco Magliano Free Software Foundation, Inc.\n"
-                    "This is free software; see the source for copying conditions.\n"
-                    "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A\n"
-                    "PARTICULAR PURPOSE.\n"
-                    "\n"
-                    "Buildtime: %s - %s\n\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
-#ifdef FILE_DOWNLOAD
-            fprintf(stdout, "\t-With automatic file download feature\n");
-#endif // FILE_DOWNLOAD
-#ifdef ANIMATION
-            fprintf(stdout, "\t-With progress animation feature\n");
-#endif // ANIMATION
-#ifdef COLOR
-            fprintf(stdout, "\t-With color on price items feature\n");
-#endif // COLOR
-#ifdef DEBUG
-            fprintf(stdout, "\t-With debug extra output feature\n");
-#endif // DEBUG
-#ifdef NO_CACHE
-            fprintf(stdout, "\t-With no file cache feature\n");
-#endif // NO_CACHE
-            fprintf(stdout, "\n");
             helpme();
             exit(EXIT_SUCCESS);
             break;
@@ -94,7 +72,7 @@ int main(int argn, char* argv[]) {
     }
 
     if(!query) {
-        printf("Nessuna query specificata, impossibile proseguire\n");
+        fprintf(stdout, "Nessuna query specificata, impossibile proseguire\n");
         exit(EXIT_SUCCESS);
     }
 
@@ -104,19 +82,6 @@ int main(int argn, char* argv[]) {
 
     if(custompath) {
         log_debug("Percorso cache castomizzato: %s", custompath);
-    } else {
-        char *cacheDir = get_file_path(argv[0], NULL);
-
-        struct stat st = {0};
-        if (stat(cacheDir, &st) == -1) {
-#ifdef _WIN32
-            mkdir(cacheDir);
-#else
-            mkdir(cacheDir, 0700);
-#endif
-        }
-
-        dmt_free(cacheDir);
     }
 
     if(searchonly) {
@@ -242,12 +207,12 @@ int main(int argn, char* argv[]) {
         station_t *station = stations;
         while (station) {
             if(searchonly) {
-                printf( //
-                    u8"* %s - %s - %s\n", //
-                    station->name, //
-                    station->address, //
-                    station->town //
-                );
+                fprintf(stdout, //
+                        u8"* %s - %s - %s\n", //
+                        station->name, //
+                        station->address, //
+                        station->town //
+                       );
             }
             if(prices != NULL) {
                 price_t *price = prices;
@@ -269,17 +234,17 @@ int main(int argn, char* argv[]) {
 #ifdef COLOR
                                 char *alert = make_alert(price);
 #endif // COLOR
-                                printf( //
-                                    u8"\t%s, %.3f euro %s (dato del %s)\n", //
-                                    price->fuelDesc, //
-                                    price->price, //
-                                    price->self == NOT_SELF ? "non servito" : "servito", //
+                                fprintf(stdout, //
+                                        u8"\t%s, %.3f euro %s (dato del %s)\n", //
+                                        price->fuelDesc, //
+                                        price->price, //
+                                        price->self == NOT_SELF ? "non servito" : "servito", //
 #ifdef COLOR
-                                    (alert) ? alert : "" //
+                                        (alert) ? alert : "" //
 #else
-                                    price->lastUpdate //
+                                        price->lastUpdate //
 #endif // COLOR
-                                );
+                                       );
 #ifdef COLOR
                                 if(alert) dmt_free(alert);
 #endif // COLOR
@@ -302,21 +267,21 @@ int main(int argn, char* argv[]) {
 #ifdef COLOR
             char *alert = make_alert((*val)->price);
 #endif // COLOR
-            printf( //
-                u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
-                key, //
-                (*val)->station->town, //
-                (*val)->station->type, //
-                (*val)->station->name, //
-                (*val)->station->address, //
-                (*val)->price->price, //
-                ((*val)->price->self == NOT_SELF) ? "non servito" : "servito", //
+            fprintf(stdout, //
+                    u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
+                    key, //
+                    (*val)->station->town, //
+                    (*val)->station->type, //
+                    (*val)->station->name, //
+                    (*val)->station->address, //
+                    (*val)->price->price, //
+                    ((*val)->price->self == NOT_SELF) ? "non servito" : "servito", //
 #ifdef COLOR
-                (alert) ? alert : "" //
+                    (alert) ? alert : "" //
 #else
-                (*val)->price->lastUpdate //
+                    (*val)->price->lastUpdate //
 #endif // COLOR
-            );
+                   );
 #ifdef COLOR
             if(alert) dmt_free(alert);
 #endif // COLOR
@@ -391,8 +356,12 @@ static char* get_file_path(const char* dir, const char* filename) {
             perror("path = null");
             return NULL;
         }
-        snprintf(path, PATH_MAX - 1, ((tmp[strlen(tmp) - 1] == '/') ? "%s" CACHE_DIR "/%s" : "%s/" CACHE_DIR "/%s"),
-                 is_directory(tmp) ? tmp : dirname(tmp), filename ? filename : "");
+        snprintf(path, PATH_MAX - 1, ((tmp[strlen(tmp) - 1] == '/') ? "%s" CACHE_DIR : "%s/" CACHE_DIR),
+                 is_directory(tmp) ? tmp : dirname(tmp));
+
+        if(!is_directory(path)) create_directory(path);
+
+        snprintf(path + strlen(path), PATH_MAX - 1, "/%s", filename ? filename : "");
 
         free(tmp);
         return path;
@@ -408,14 +377,49 @@ static int is_directory(const char *path) {
     return S_ISDIR(statbuf.st_mode);
 }
 
+static void create_directory(const char *path) {
+    struct stat st = {0};
+    if (stat(path, &st) == -1) {
+#ifdef _WIN32
+        mkdir(path);
+#else
+        mkdir(path, 0700);
+#endif
+    }
+}
+
 static void helpme() {
-    printf("Parametri:\n\n"
-           "\t-q --query --> Comune di ricerca oppure id impianto usando es: \"-q id:34974\" \n"
-           "\t-t --type --> Filtro tipologia carburante\n"
-           "\t-p --path --> Percorso cache applicativa\n"
-           "\t-s --search-only --> Ricerca semplice\n"
-           "\t-u --ignore-cache --> Ignora la cache\n"
-           "\t-o --ignore-old --> Ignora i record non aggiornati di recente\n"
-           "\t-v --verbose --> Log verboso\n"
-           "\t-h --help --> Visualizza questo aiuto\n");
+    fprintf(stdout, "%s %s\n"
+            "\n"
+            "Copyright (C) 2020-2022 Marco Magliano Free Software Foundation, Inc.\n"
+            "This is free software; see the source for copying conditions.\n"
+            "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A\n"
+            "PARTICULAR PURPOSE.\n"
+            "\n"
+            "Buildtime: %s - %s\n\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
+#ifdef FILE_DOWNLOAD
+    fprintf(stdout, "\t-With automatic file download feature\n");
+#endif // FILE_DOWNLOAD
+#ifdef ANIMATION
+    fprintf(stdout, "\t-With progress animation feature\n");
+#endif // ANIMATION
+#ifdef COLOR
+    fprintf(stdout, "\t-With color on price items feature\n");
+#endif // COLOR
+#ifdef DEBUG
+    fprintf(stdout, "\t-With debug extra output feature\n");
+#endif // DEBUG
+#ifdef NO_CACHE
+    fprintf(stdout, "\t-With no file cache feature\n");
+#endif // NO_CACHE
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Parametri:\n\n"
+            "\t-q --query --> Comune di ricerca oppure id impianto usando es: \"-q id:34974\" \n"
+            "\t-t --type --> Filtro tipologia carburante\n"
+            "\t-p --path --> Percorso cache applicativa\n"
+            "\t-s --search-only --> Ricerca semplice\n"
+            "\t-u --ignore-cache --> Ignora la cache\n"
+            "\t-o --ignore-old --> Ignora i record non aggiornati di recente\n"
+            "\t-v --verbose --> Log verboso\n"
+            "\t-h --help --> Visualizza questo aiuto\n");
 }
