@@ -65,7 +65,9 @@ static void * progress(void *);
 
 static char* get_file_path(const char*, const char*);
 
-static int is_directory(const char *path);
+static int is_directory(const char *);
+
+static void create_directory(const char *);
 
 static void helpme();
 
