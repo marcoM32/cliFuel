@@ -49,6 +49,7 @@
 #endif // COLOR
 
 #define QUERY_PREFIX_ID "id:"
+#define QUERY_PREFIX_PROV "prov:"
 
 enum item_age {UNDEF = 0, NEW, OK, OLD };
 

@@ -98,11 +98,14 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 10) {
                 int id = -1;
+                char *prov = NULL;
                 if(strStartsWith(query, QUERY_PREFIX_ID)) {
                     id = atoi(query + +strlen(QUERY_PREFIX_ID));
+                } else if(strStartsWith(query, QUERY_PREFIX_PROV)) {
+                    prov = strCopy(query + strlen(QUERY_PREFIX_PROV));
                 }
                 int stationId = atoi(rowFields[0]);
-                if((id == stationId) || strcasecmp(rowFields[6], query) == 0) {
+                if((id == stationId) || strcasecmp(rowFields[6], query) == 0 || (prov && strcasecmp(rowFields[7], prov) == 0)) {
                     station_t *current = (station_t *) dmt_malloc(sizeof(station_t));
                     current->id = stationId;
                     current->name = strCopy(rowFields[1]);
@@ -121,6 +124,7 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
                     }
                     if(id == stationId) break;
                 }
+                if(prov) dmt_free(prov);
             }
             CsvParser_destroy_row(row);
         }
