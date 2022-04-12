@@ -43,7 +43,7 @@
 #include "opendata.h"
 
 #define CODE_NAME "Fog"
-#define PROGRAM_VERSION "v0.02" " (" CODE_NAME ")"
+#define PROGRAM_VERSION "v0.03" " (" CODE_NAME ")"
 
 static struct option long_options[] = {
     { "query", required_argument, NULL, 'q' },
