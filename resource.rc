@@ -15,5 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#include "version.h"
 
 MY_ICON ICON "icon.ico"
+
+1 VERSIONINFO
+FILEVERSION     0,PROGRAM_VERSION_MAJOR,PROGRAM_VERSION_MINOR,PROGRAM_VERSION_PATCH
+PRODUCTVERSION  0,PROGRAM_VERSION_MAJOR,PROGRAM_VERSION_MINOR,PROGRAM_VERSION_PATCH
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080904E4"
+    BEGIN
+      VALUE "CompanyName", PROGRAM_NAME "\0"
+      VALUE "FileDescription", PROGRAM_NAME "\0"
+      VALUE "FileVersion", PROGRAM_VERSION "\0"
+      VALUE "InternalName", CODE_NAME "\0"
+      VALUE "LegalCopyright", PROGRAM_NAME "\0"
+      VALUE "OriginalFilename", PROGRAM_NAME ".exe\0"
+      VALUE "ProductName", PROGRAM_NAME "\0"
+      VALUE "ProductVersion", PROGRAM_VERSION "\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END

@@ -28,9 +28,11 @@
 #include <ctype.h>
 #include <log.h>
 #include <dmt.h>
+#include <strsplit.h>
 #include <curl/curl.h>
 #include <csvparser.h>
 #include <time.h>
+#include "version.h"
 
 #define CACHE_DIR ".clifuel-cache"
 
@@ -43,6 +45,8 @@
 #define FILE_SEPARATOR ";"
 #define FILE_HEADER false
 
+#define QUERY_LIST_SEPATATOR ","
+
 #ifdef COLOR
 #define COLOR_START_PATTERN(c) "\e[1;" #c "m"
 #define COLOR_END_PATTERN "\e[0m"
@@ -50,6 +54,7 @@
 
 #define QUERY_PREFIX_ID "id:"
 #define QUERY_PREFIX_PROV "prov:"
+#define QUERY_PREFIX_LIST "list:"
 
 enum item_age {UNDEF = 0, NEW, OK, OLD };
 

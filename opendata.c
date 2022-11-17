@@ -42,10 +42,19 @@ static char* strToLower(const char* str) {
     return NULL;
 }
 
+// https://curl.se/libcurl/c/url2file.html
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+    size_t written = fwrite(ptr, size, nmemb, (FILE*) stream);
+    return written;
+}
+
 bool download(const char* url, const char* target) {
     long http_code = 0;
     CURL *curl = NULL;
     CURLcode res = CURLE_OK;
+
+    char user_agent[40] = {};
+    sprintf(user_agent, "%s %s", PROGRAM_NAME, PROGRAM_VERSION);
 
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -62,19 +71,26 @@ bool download(const char* url, const char* target) {
 #ifdef DEBUG
         log_debug("URL: %s", url);
         log_debug("Target: %s", target);
+        log_debug("User-Agent: %s", user_agent);
 #endif // DEBUG
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, (long) CURL_HTTP_VERSION_1_1);
+        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, user_agent);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
 
         FILE* file = fopen(target,"wb");
         if(file) {
+
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+
             res = curl_easy_perform(curl);
             if(res != CURLE_OK)
                 log_error("curl_easy_perform() fallita: %s", curl_easy_strerror(res));
 
-            curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
             fclose(file);
 
@@ -86,6 +102,7 @@ bool download(const char* url, const char* target) {
     }
 
     curl_easy_cleanup(curl);
+    curl_global_cleanup();
     return (res == CURLE_OK && http_code == 200) ? true : false;
 }
 
@@ -97,34 +114,44 @@ station_t* stationFinder(char* filename, char* separator, bool header, char* que
         while ((row = CsvParser_getRow(csvparser))) {
             const char **rowFields = CsvParser_getFields(row);
             if(CsvParser_getNumFields(row) == 10) {
-                int id = -1;
-                char *prov = NULL;
-                if(strStartsWith(query, QUERY_PREFIX_ID)) {
-                    id = atoi(query + +strlen(QUERY_PREFIX_ID));
-                } else if(strStartsWith(query, QUERY_PREFIX_PROV)) {
-                    prov = strCopy(query + strlen(QUERY_PREFIX_PROV));
+                size_t nb = 1;
+                char** queries = malloc(sizeof(char*));
+                queries[0] = query;
+                if(strStartsWith(query, QUERY_PREFIX_LIST)) {
+                    free(queries);
+                    queries = strsplit_count(query + strlen(QUERY_PREFIX_LIST), QUERY_LIST_SEPATATOR, &nb);
                 }
-                int stationId = atoi(rowFields[0]);
-                if((id == stationId) || strcasecmp(rowFields[6], query) == 0 || (prov && strcasecmp(rowFields[7], prov) == 0)) {
-                    station_t *current = (station_t *) dmt_malloc(sizeof(station_t));
-                    current->id = stationId;
-                    current->name = strCopy(rowFields[1]);
-                    current->type = strCopy(rowFields[2]);
-                    current->address = strCopy(rowFields[5]);
-                    current->town = strCopy(rowFields[6]);
-                    current->next = NULL;
-                    if(!head) {
-                        head = current;
-                    } else {
-                        station_t *stmp = head;
-                        while(stmp->next) {
-                            stmp = stmp->next;
-                        }
-                        stmp->next = current;
+                for(size_t i = 0; i < nb; i++) {
+                    int id = -1;
+                    char *prov = NULL;
+                    if(strStartsWith(queries[i], QUERY_PREFIX_ID)) {
+                        id = atoi(queries[i] + strlen(QUERY_PREFIX_ID));
+                    } else if(strStartsWith(queries[i], QUERY_PREFIX_PROV)) {
+                        prov = strCopy(queries[i] + strlen(QUERY_PREFIX_PROV));
                     }
-                    if(id == stationId) break;
+                    int stationId = atoi(rowFields[0]);
+                    if((id == stationId) || strcasecmp(rowFields[6], queries[i]) == 0 || (prov && strcasecmp(rowFields[7], prov) == 0)) {
+                        station_t *current = (station_t *) dmt_malloc(sizeof(station_t));
+                        current->id = stationId;
+                        current->name = strCopy(rowFields[1]);
+                        current->type = strCopy(rowFields[2]);
+                        current->address = strCopy(rowFields[5]);
+                        current->town = strCopy(rowFields[6]);
+                        current->next = NULL;
+                        if(!head) {
+                            head = current;
+                        } else {
+                            station_t *stmp = head;
+                            while(stmp->next) {
+                                stmp = stmp->next;
+                            }
+                            stmp->next = current;
+                        }
+                        if(id == stationId) break;
+                    }
+                    if(prov) dmt_free(prov);
                 }
-                if(prov) dmt_free(prov);
+                free(queries);
             }
             CsvParser_destroy_row(row);
         }

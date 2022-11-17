@@ -396,7 +396,7 @@ static void helpme() {
             "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A\n"
             "PARTICULAR PURPOSE.\n"
             "\n"
-            "Buildtime: %s - %s\n\n", "cliFuel", PROGRAM_VERSION, __DATE__, __TIME__);
+            "Buildtime: %s - %s\n\n", PROGRAM_NAME, PROGRAM_VERSION, __DATE__, __TIME__);
 #ifdef FILE_DOWNLOAD
     fprintf(stdout, "\t-With automatic file download feature\n");
 #endif // FILE_DOWNLOAD
@@ -414,12 +414,12 @@ static void helpme() {
 #endif // NO_CACHE
     fprintf(stdout, "\n");
     fprintf(stdout, "Parametri:\n\n"
-            "\t-q --query --> Comune di ricerca oppure id impianto usando es: \"-q %s34974 || -q %sRO\" \n"
+            "\t-q --query --> Comune di ricerca oppure id impianto usando es: \"-q %s34974 || -q %sRO || -q %sroma,bologna\"\n"
             "\t-t --type --> Filtro tipologia carburante\n"
             "\t-p --path --> Percorso cache applicativa\n"
             "\t-s --search-only --> Ricerca semplice\n"
             "\t-u --ignore-cache --> Ignora la cache\n"
             "\t-o --ignore-old --> Ignora i record non aggiornati di recente\n"
             "\t-v --verbose --> Log verboso\n"
-            "\t-h --help --> Visualizza questo aiuto\n", QUERY_PREFIX_ID, QUERY_PREFIX_PROV);
+            "\t-h --help --> Visualizza questo aiuto\n", QUERY_PREFIX_ID, QUERY_PREFIX_PROV, QUERY_PREFIX_LIST);
 }
