@@ -1,10 +1,6 @@
 bin/
 obj/
-*.cbp
-*.depend
-*.layout
 *.csv
-*.cscope_file_list
 CsvParser/
 map/
 log.c/
@@ -12,3 +8,8 @@ progressbar/
 dmt/
 *.zip
 *.o
+curl/
+termcap*/
+*.exe
+/*.res
+/strsplit.c

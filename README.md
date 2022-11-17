@@ -26,6 +26,12 @@ $ ./cliFuel -q roma -s
 $ ./cliFuel -q roma
 ```
 
+or use list notation
+
+```
+$ ./cliFuel -q list:roma,milano,trieste
+```
+
 <center>
     <img src="img/best-price.png" width="100%" />
 </center>
@@ -59,6 +65,24 @@ $ ./cliFuel -h
 ## Libraries linked dynamically
 
 1. https://curl.haxx.se/libcurl/c/libcurl.html
+
+## CliFuel as Docker service with email notification
+
+It is possible to receive cliFuel elaborations on your email using the Docker 
+container which can be created as follows
+
+### To build your own Docker image run
+
+```
+$ docker build -t clifuel --build-arg ARG_ACCOUNT_GMAIL_TO=<your user> \
+--build-arg ARG_ACCOUNT_GMAIL_USER=<your user> \
+--build-arg ARG_ACCOUNT_GMAIL_PASSWORD=<your password> --progress=plain .
+```
+### To run the Docker container using your preference
+
+```
+$ docker run --name clifuel --rm clifuel -q <your place>
+```
 
 ## License
 
