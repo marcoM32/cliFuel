@@ -1,7 +1,7 @@
 #!/bin/bash
 
 RCEDIT_V="v1.1.1"
-CURL_V="7.86.0"
+CURL_V="7.87.0"
 OPENSSL_V="1.1.1h"
 TERMCAP_V="1.3.1"
 CCCSVPARSER_V="2016-12-06"
@@ -52,7 +52,6 @@ finalize() {
 
     for build in "${BUILDS[@]}" ; do
         KEY="${build%%:*}"
-        VALUE="${build##*:}"
         if [ -f "${BUILD_DIR}/${KEY}" ]; then
             chmod +x $BUILD_DIR/"${build%%:*}"
             "${BUILD_DIR}/${KEY}" -h
