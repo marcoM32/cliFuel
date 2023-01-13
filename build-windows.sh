@@ -104,7 +104,7 @@ COMPILER_DIR="-I. -I./log.c/src -I./CsvParser/include -I./map/src -I./strsplit.c
 LINKER_DIR="-L./curl/ -L./log.c/ -L./CsvParser/ -L./map/ -L./strsplit.c/ -L./progressbar/ -L./dmt/"
 LIBRARIES="-lcurl -lrxilog -lcsvparser -lrximap -lstrsplit -lprogressbar -lrxidmt -lpthread"
 
-BUILDS=("cliFuel-basic.exe:-DFILE_DOWNLOAD" "cliFuel.exe:-DFILE_DOWNLOAD -DANIMATION")
+BUILDS=("cliFuel-basic.exe:-DFILE_DOWNLOAD" "cliFuel.exe:-DFILE_DOWNLOAD -DANIMATION" "cliFuel.exe:-DFILE_DOWNLOAD -DANIMATION -DHTML_OUTPUT")
 
 build
 

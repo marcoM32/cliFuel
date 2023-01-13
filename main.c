@@ -20,6 +20,11 @@
 
 int main(int argn, char* argv[]) {
 
+#ifdef HTML_OUTPUT
+    html_fprintf(stdout, HTML_TAG_OPEN_PAGE, NULL, NEW_LINE);
+    atexit(on_exit_close_tag);
+#endif
+
     if(argn <= 1) helpme(), exit(EXIT_SUCCESS);
 
     log_set_level(LOG_ERROR);
@@ -44,7 +49,7 @@ int main(int argn, char* argv[]) {
         case 'p':
             if (optarg) custompath = optarg;
             if(!custompath || !is_directory(custompath)) {
-                fprintf(stdout, u8"Il percorso indicato con -p (--path) non è una directory valida\n");
+                fprintf(stdout, u8"Il percorso indicato con -p (--path) non è una directory valida" NEW_LINE);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -65,14 +70,14 @@ int main(int argn, char* argv[]) {
             exit(EXIT_SUCCESS);
             break;
         case '?':
-            fprintf(stdout, "Comando sconosciuto: %c\n", optopt);
+            fprintf(stdout, "Comando sconosciuto: %c" NEW_LINE, optopt);
             exit(EXIT_FAILURE);
             break;
         }
     }
 
     if(!query) {
-        fprintf(stdout, "Nessuna query specificata, impossibile proseguire\n");
+        fprintf(stdout, "Nessuna query specificata, impossibile proseguire" NEW_LINE);
         exit(EXIT_SUCCESS);
     }
 
@@ -174,7 +179,7 @@ int main(int argn, char* argv[]) {
     if(stations) {
         station_t *tmp = stations;
         while (tmp) {
-            log_debug(u8"%d - %s - %s - %s\n", tmp->id, tmp->name, tmp->address, tmp->town);
+            log_debug(u8"%d - %s - %s - %s", tmp->id, tmp->name, tmp->address, tmp->town);
             tmp = tmp->next;
         }
     }
@@ -189,7 +194,7 @@ int main(int argn, char* argv[]) {
     if(prices) {
         price_t *tmp = prices;
         while (tmp) {
-            log_debug(u8"%s, %.3f euro %s (%s)\n", tmp->fuelDesc, tmp->price, tmp->self == NOT_SELF ? "non servito" : "servito", tmp->lastUpdate);
+            log_debug(u8"%s, %.3f euro %s (%s)", tmp->fuelDesc, tmp->price, tmp->self == NOT_SELF ? "non servito" : "servito", tmp->lastUpdate);
             tmp = tmp->next;
         }
     }
@@ -208,7 +213,7 @@ int main(int argn, char* argv[]) {
         while (station) {
             if(searchonly) {
                 fprintf(stdout, //
-                        u8"* %s - %s - %s\n", //
+                        u8"* %s - %s - %s" NEW_LINE, //
                         station->name, //
                         station->address, //
                         station->town //
@@ -235,7 +240,7 @@ int main(int argn, char* argv[]) {
                                 char *alert = make_alert(price);
 #endif // COLOR
                                 fprintf(stdout, //
-                                        u8"\t%s, %.3f euro %s (dato del %s)\n", //
+                                        TAB u8"%s, %.3f euro %s (dato del %s)" NEW_LINE, //
                                         price->fuelDesc, //
                                         price->price, //
                                         price->self == NOT_SELF ? "non servito" : "servito", //
@@ -268,7 +273,7 @@ int main(int argn, char* argv[]) {
             char *alert = make_alert((*val)->price);
 #endif // COLOR
             fprintf(stdout, //
-                    u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)\n", //
+                    u8"Miglior prezzo %s -> [%s / %s] %s (%s) / %.3f euro %s (ultimo aggiornamento il %s)" NEW_LINE, //
                     key, //
                     (*val)->station->town, //
                     (*val)->station->type, //
@@ -290,14 +295,14 @@ int main(int argn, char* argv[]) {
     }
 
 #ifdef COLOR
-    fprintf(stdout, "\n\n");
-    fprintf(stdout, "Legenda dei colori:\n");
-    fprintf(stdout, "\t-%s\n", COLOR_START_PATTERN(32) u8"Dato di oggi" COLOR_END_PATTERN);
-    fprintf(stdout, "\t-%s\n", COLOR_START_PATTERN(93) u8"Dato di uno, massimo due giorni" COLOR_END_PATTERN);
+    fprintf(stdout, NEW_LINE NEW_LINE);
+    fprintf(stdout, "Legenda dei colori:" NEW_LINE);
+    fprintf(stdout, TAB "-%s" NEW_LINE, COLOR_START_PATTERN(32) u8"Dato di oggi" COLOR_END_PATTERN);
+    fprintf(stdout, TAB "-%s" NEW_LINE, COLOR_START_PATTERN(93) u8"Dato di uno, massimo due giorni" COLOR_END_PATTERN);
     if(!ignoreold) {
-        fprintf(stdout, "\t-%s\n", COLOR_START_PATTERN(31) u8"Dato con più di tre giorni" COLOR_END_PATTERN);
+        fprintf(stdout, TAB "-%s" NEW_LINE, COLOR_START_PATTERN(31) u8"Dato con più di tre giorni" COLOR_END_PATTERN);
     }
-    fprintf(stdout, "\n\n");
+    fprintf(stdout, NEW_LINE NEW_LINE);
 #endif // COLOR
 
 #ifdef NO_CACHE
@@ -388,38 +393,65 @@ static void create_directory(const char *path) {
     }
 }
 
+#ifdef HTML_OUTPUT
+static void on_exit_close_tag() {
+    html_fprintf(stdout, NULL, HTML_TAG_CLOSE_PAGE, NEW_LINE);
+
+}
+
+static void html_fprintf(FILE * _File, const char * opentag, const char * closetag, const char * _Format, ...) {
+    va_list args;
+    char *result = dmt_malloc(((opentag) ? strlen(opentag) : 0) + ((closetag) ? strlen(closetag) : 0) + strlen(_Format) + 1);
+    if (result) {
+        va_start(args, _Format);
+        int pos = 0;
+        if(opentag)
+            pos += sprintf(&result[pos], "%s", opentag);
+        pos += sprintf(&result[pos], "%s", _Format);
+        if(closetag)
+            pos += sprintf(&result[pos], "%s", closetag);
+        vfprintf(_File, result, args);
+        va_end(args);
+        dmt_free(result);
+    }
+}
+#endif // HTML_OUTPUT
+
 static void helpme() {
-    fprintf(stdout, "%s %s\n"
-            "\n"
-            "Copyright (C) 2020-2022 Marco Magliano Free Software Foundation, Inc.\n"
-            "This is free software; see the source for copying conditions.\n"
-            "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A\n"
-            "PARTICULAR PURPOSE.\n"
-            "\n"
-            "Buildtime: %s - %s\n\n", PROGRAM_NAME, PROGRAM_VERSION, __DATE__, __TIME__);
+    fprintf(stdout, "%s %s" NEW_LINE
+            NEW_LINE
+            "Copyright (C) 2020-2022 Marco Magliano Free Software Foundation, Inc." NEW_LINE
+            "This is free software; see the source for copying conditions." NEW_LINE
+            "There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A" NEW_LINE
+            "PARTICULAR PURPOSE." NEW_LINE
+            NEW_LINE
+            "Buildtime: %s - %s" NEW_LINE NEW_LINE, PROGRAM_NAME, PROGRAM_VERSION, __DATE__, __TIME__);
 #ifdef FILE_DOWNLOAD
-    fprintf(stdout, "\t-With automatic file download feature\n");
+    fprintf(stdout, TAB "-With automatic file download feature" NEW_LINE);
 #endif // FILE_DOWNLOAD
 #ifdef ANIMATION
-    fprintf(stdout, "\t-With progress animation feature\n");
+    fprintf(stdout, TAB "-With progress animation feature" NEW_LINE);
 #endif // ANIMATION
 #ifdef COLOR
-    fprintf(stdout, "\t-With color on price items feature\n");
+    fprintf(stdout, TAB "-With color on price items feature" NEW_LINE);
 #endif // COLOR
 #ifdef DEBUG
-    fprintf(stdout, "\t-With debug extra output feature\n");
+    fprintf(stdout, TAB "-With debug extra output feature" NEW_LINE);
 #endif // DEBUG
 #ifdef NO_CACHE
-    fprintf(stdout, "\t-With no file cache feature\n");
+    fprintf(stdout, TAB "-With no file cache feature" NEW_LINE);
 #endif // NO_CACHE
-    fprintf(stdout, "\n");
-    fprintf(stdout, "Parametri:\n\n"
-            "\t-q --query --> Comune di ricerca oppure id impianto usando es: \"-q %s34974 || -q %sRO || -q %sroma,bologna\"\n"
-            "\t-t --type --> Filtro tipologia carburante\n"
-            "\t-p --path --> Percorso cache applicativa\n"
-            "\t-s --search-only --> Ricerca semplice\n"
-            "\t-u --ignore-cache --> Ignora la cache\n"
-            "\t-o --ignore-old --> Ignora i record non aggiornati di recente\n"
-            "\t-v --verbose --> Log verboso\n"
-            "\t-h --help --> Visualizza questo aiuto\n", QUERY_PREFIX_ID, QUERY_PREFIX_PROV, QUERY_PREFIX_LIST);
+#ifdef HTML_OUTPUT
+    fprintf(stdout, TAB "-With html output format" NEW_LINE);
+#endif // HTML_OUTPUT
+    fprintf(stdout, NEW_LINE);
+    fprintf(stdout, "Parametri:" NEW_LINE NEW_LINE
+            TAB "-q --query --> Comune di ricerca oppure id impianto usando es: \"-q %s34974 || -q %sRO || -q %sroma,bologna\"" NEW_LINE
+            TAB "-t --type --> Filtro tipologia carburante" NEW_LINE
+            TAB "-p --path --> Percorso cache applicativa" NEW_LINE
+            TAB "-s --search-only --> Ricerca semplice" NEW_LINE
+            TAB "-u --ignore-cache --> Ignora la cache" NEW_LINE
+            TAB "-o --ignore-old --> Ignora i record non aggiornati di recente" NEW_LINE
+            TAB "-v --verbose --> Log verboso" NEW_LINE
+            TAB "-h --help --> Visualizza questo aiuto" NEW_LINE, QUERY_PREFIX_ID, QUERY_PREFIX_PROV, QUERY_PREFIX_LIST);
 }
