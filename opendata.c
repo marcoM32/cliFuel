@@ -1,6 +1,6 @@
 /**
  * cliFuel
- * Copyright (C) 2020-2022 Marco Magliano
+ * Copyright (C) 2020-2023 Marco Magliano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 #include "opendata.h"
 
-static bool strStartsWith(const char *a, const char *b) {
+static bool strStartsWith(const char* a, const char* b) {
     if(strncmp(a, b, strlen(b)) == 0) return 1;
     return 0;
 }
@@ -43,14 +43,14 @@ static char* strToLower(const char* str) {
 }
 
 // https://curl.se/libcurl/c/url2file.html
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+static size_t write_data(void* ptr, size_t size, size_t nmemb, void* stream) {
     size_t written = fwrite(ptr, size, nmemb, (FILE*) stream);
     return written;
 }
 
 bool download(const char* url, const char* target) {
     long http_code = 0;
-    CURL *curl = NULL;
+    CURL* curl = NULL;
     CURLcode res = CURLE_OK;
 
     char user_agent[40] = {};
@@ -289,7 +289,7 @@ enum item_age is_old_data(const char* data) {
 }
 
 #ifdef COLOR
-char* make_alert(const price_t *price) {
+char* make_alert(const price_t* price) {
     if(!price) return NULL;
     char *pattern = dmt_malloc(sizeof(char) * strlen(price->lastUpdate) + strlen(COLOR_START_PATTERN(100)) /* !!! Pericoloso !!! */ +  strlen(COLOR_END_PATTERN) + 1); // + \0
     if(!pattern) return NULL;

@@ -1,6 +1,6 @@
 /**
  * cliFuel
- * Copyright (C) 2020-2022 Marco Magliano
+ * Copyright (C) 2020-2023 Marco Magliano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

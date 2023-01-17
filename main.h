@@ -1,6 +1,6 @@
 /**
  * cliFuel
- * Copyright (C) 2020-2022 Marco Magliano
+ * Copyright (C) 2020-2023 Marco Magliano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,9 @@
 #endif // HTML_OUTPUT
 
 #ifdef HTML_OUTPUT
+#ifdef COLOR
+#error "Color function in html output mode is not yet supported"
+#endif // COLOR
 #define fprintf(f_, ...) html_fprintf(f_, HTML_TAG_OPEN_PARAGRAPH, HTML_TAG_CLOSE_PARAGRAPH, ##__VA_ARGS__)
 #define HTML_TAG_OPEN_PAGE "<!DOCTYPE html><html><body>"
 #define HTML_TAG_CLOSE_PAGE "</body></html>"
@@ -57,7 +60,7 @@
 #else
 #define NEW_LINE "\n"
 #define TAB "\t"
-#endif
+#endif // HTML_OUTPUT
 
 static struct option long_options[] = {
     { "query", required_argument, NULL, 'q' },
