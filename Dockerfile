@@ -4,10 +4,13 @@ MAINTAINER Marco Magliano
 ARG ARG_ACCOUNT_GMAIL_TO
 ARG ARG_ACCOUNT_GMAIL_USER
 ARG ARG_ACCOUNT_GMAIL_PASSWORD
+ARG ARG_GIT_BRANCH=master
+
 
 ENV ACCOUNT_GMAIL_TO=$ARG_ACCOUNT_GMAIL_TO
 ENV ACCOUNT_GMAIL_USER=$ARG_ACCOUNT_GMAIL_USER
 ENV ACCOUNT_GMAIL_PASSWORD=$ARG_ACCOUNT_GMAIL_PASSWORD
+ENV GIT_BRANCH=$ARG_GIT_BRANCH
 
 RUN useradd -rm -d /home/clifueluser -s /bin/bash -u 600 clifueluser
 
@@ -23,7 +26,7 @@ RUN make
 RUN make install
 WORKDIR /home/clifueluser
 RUN rm -Rfv ./mailsend
-RUN git clone https://www.github.com/marcoM32/cliFuel.git
+RUN git clone -b $GIT_BRANCH https://www.github.com/marcoM32/cliFuel.git
 WORKDIR /home/clifueluser/cliFuel
 RUN ./build-linux.sh
 
