@@ -78,6 +78,10 @@ $ docker build -t clifuel --build-arg ARG_ACCOUNT_GMAIL_TO=<your user> \
 --build-arg ARG_ACCOUNT_GMAIL_USER=<your user> \
 --build-arg ARG_ACCOUNT_GMAIL_PASSWORD=<your password> --progress=plain .
 ```
+
+By default during docker build is cloned "master" branch to override this behavior 
+add ARG_GIT_BRANCH=<dev> argument to the build command
+
 ### To run the Docker container using your preference
 
 ```
